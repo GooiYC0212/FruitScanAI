@@ -1,6 +1,5 @@
 import streamlit as st
 import torch
-import cv2
 import numpy as np
 from collections import Counter
 from PIL import Image

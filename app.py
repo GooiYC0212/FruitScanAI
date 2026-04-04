@@ -18,26 +18,27 @@ st.set_page_config(
 # =========================
 # CUSTOM CSS
 # =========================
-def apply_custom_css(): st.markdown( """
+def apply_custom_css():
+    st.markdown(
+        """
         <style>
-        
         /* ========= App Background ========= */
         .stApp {
             background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
         }
-        
+
         .block-container {
             padding-top: 1.5rem;
             padding-bottom: 2rem;
             max-width: 1400px;
         }
-        
+
         /* ========= Global Text ========= */
         h1, h2, h3, h4, h5, h6,
         p, span, label, div, small {
             color: #0f172a;
         }
-        
+
         /* ========= Hero ========= */
         .hero-card {
             background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #38bdf8 100%);
@@ -46,21 +47,21 @@ def apply_custom_css(): st.markdown( """
             box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
             margin-bottom: 1rem;
         }
-        
+
         .hero-card * {
             color: white !important;
         }
-        
+
         .hero-title {
             font-size: 2rem;
             font-weight: 800;
         }
-        
+
         .hero-subtitle {
             font-size: 1rem;
             opacity: 0.95;
         }
-        
+
         .status-pill {
             padding: 0.35rem 0.7rem;
             border-radius: 999px;
@@ -68,7 +69,7 @@ def apply_custom_css(): st.markdown( """
             border: 1px solid rgba(255,255,255,0.28);
             color: white !important;
         }
-        
+
         /* ========= Cards ========= */
         .section-card {
             background: #ffffff;
@@ -77,7 +78,7 @@ def apply_custom_css(): st.markdown( """
             padding: 1rem;
             box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
         }
-        
+
         .mini-card {
             background: white;
             border-radius: 18px;
@@ -85,27 +86,27 @@ def apply_custom_css(): st.markdown( """
             border: 1px solid rgba(15, 23, 42, 0.08);
             box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
         }
-        
+
         .label-text {
             font-size: 0.85rem;
             color: #64748b !important;
         }
-        
+
         .value-text {
             font-size: 1.6rem;
             font-weight: 800;
             color: #0f172a !important;
         }
-        
+
         /* ========= Sidebar ========= */
         section[data-testid="stSidebar"] {
             background: #f8fbff;
         }
-        
+
         section[data-testid="stSidebar"] * {
             color: #0f172a !important;
         }
-        
+
         /* ========= Metrics ========= */
         div[data-testid="stMetric"] {
             background: #ffffff;
@@ -113,11 +114,11 @@ def apply_custom_css(): st.markdown( """
             padding: 14px;
             border: 1px solid rgba(15, 23, 42, 0.08);
         }
-        
+
         div[data-testid="stMetric"] * {
             color: #0f172a !important;
         }
-        
+
         /* ========= Tabs ========= */
         .stTabs [data-baseweb="tab"] {
             background: #e8eefc;
@@ -126,17 +127,17 @@ def apply_custom_css(): st.markdown( """
             color: #0f172a !important;
             font-weight: 700;
         }
-        
+
         .stTabs [aria-selected="true"] {
             background: #2563eb !important;
             color: white !important;
         }
-        
+
         .stTabs [aria-selected="true"] * {
             color: white !important;
         }
-        
-        /* ========= Upload Image（白色卡片版） ========= */
+
+        /* ========= Upload Image ========= */
         [data-testid="stFileUploader"] {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
@@ -144,110 +145,90 @@ def apply_custom_css(): st.markdown( """
             padding: 12px !important;
             box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
         }
-        
-        /* uploader 内部 */
+
         [data-testid="stFileUploader"] section {
             background: #ffffff !important;
         }
-        
-        /* uploader 文字 */
+
+        /* uploader normal text */
         [data-testid="stFileUploader"] label,
-        [data-testid="stFileUploader"] span,
-        [data-testid="stFileUploader"] div,
         [data-testid="stFileUploader"] small {
             color: #0f172a !important;
         }
-        
-        /* 已上传文件 */
-        [data-testid="stFileUploader"] button {
-            background: #f1f5f9 !important;
-            color: #0f172a !important;
-            border-radius: 10px;
+
+        /* uploaded file chip / black box */
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"],
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] * {
+            color: white !important;
         }
-        
+
+        /* fallback for uploaded filename area */
+        [data-testid="stFileUploader"] section button,
+        [data-testid="stFileUploader"] section button * {
+            color: white !important;
+        }
+
+        /* plus icon area stays visible */
+        [data-testid="stFileUploader"] svg {
+            color: #0f172a !important;
+            fill: #0f172a !important;
+        }
+
         /* ========= Camera ========= */
         [data-testid="stCameraInput"] {
             background: #ffffff !important;
             border-radius: 16px;
             padding: 10px;
         }
-        
+
         [data-testid="stCameraInput"] * {
             color: #0f172a !important;
         }
-        
+
         /* ========= Buttons ========= */
         .stButton button {
             color: #0f172a !important;
         }
-        
+
         /* ========= Dataframe ========= */
         [data-testid="stDataFrame"] div {
             color: #0f172a !important;
         }
-        
+
+        /* Fullscreen floating button and tooltip */
+        button[title="Fullscreen"],
+        button[title="View fullscreen"],
+        [data-testid="stElementToolbarButton"],
+        [data-testid="stElementToolbarButton"] * {
+            color: white !important;
+            fill: white !important;
+        }
+
+        /* tooltip / popup black background text */
+        div[role="tooltip"],
+        div[role="tooltip"] * {
+            color: white !important;
+        }
+
+        /* dark toolbar / dark chip generic fix */
+        div[style*="background-color: rgb(0, 0, 0)"],
+        div[style*="background-color: #000"],
+        div[style*="background: rgb(0, 0, 0)"],
+        div[style*="background: #000"],
+        button[style*="background-color: rgb(0, 0, 0)"],
+        button[style*="background: rgb(0, 0, 0)"] {
+            color: white !important;
+        }
+
         /* ========= Alerts ========= */
         .stAlert, .stInfo, .stSuccess, .stWarning {
             border-radius: 12px;
         }
-        
-        /* ========= 防止黑底问题 ========= */
-        div[style*="background-color: rgb(0, 0, 0)"],
-        div[style*="background-color: #000"] {
-            color: white !important;
-        }
 
-        /* ===== 修复 DataFrame 黑色工具栏 ===== */
-        [data-testid="stDataFrame"] button,
-        [data-testid="stDataFrame"] span,
-        [data-testid="stDataFrame"] div {
-            color: white !important;
-        }
-        
-        /* DataFrame 顶部黑色 bar */
-        [data-testid="stDataFrame"] {
-            color: white !important;
-        }
-        
-        /* Fullscreen 按钮 */
-        button[title="Fullscreen"],
-        button[title="View fullscreen"] {
-            color: white !important;
-        }
-        
-        /* DataFrame hover toolbar */
-        div[data-testid="stDataFrame"] div[role="button"] {
-            color: white !important;
-        }
-        
-        /* ===== 修复 Camera 黑底按钮 ===== */
-        [data-testid="stCameraInput"] button {
-            background: #0f172a !important;
-            color: white !important;
-        }
-        
-        /* Take Photo 文字 */
-        [data-testid="stCameraInput"] span {
-            color: white !important;
-        }
-        
-        /* ===== 修复 uploader 小黑块（文件名框） ===== */
-        [data-testid="stFileUploader"] div[role="button"] span {
-            color: #0f172a !important;
-        }
-        
-        /* ===== 防止所有深色背景文字消失（终极保险） ===== */
-        div[style*="background-color: rgb(0, 0, 0)"],
-        div[style*="background-color: #000"],
-        div[style*="background: rgb(0, 0, 0)"] {
-            color: white !important;
-        }
-        
         </style>
         """,
         unsafe_allow_html=True,
     )
-
 
 apply_custom_css()
 

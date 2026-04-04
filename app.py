@@ -1,8 +1,9 @@
 import streamlit as st
-import torch
 import numpy as np
+import pandas as pd
 from collections import Counter
 from PIL import Image
+from ultralytics import YOLO
 
 # =========================
 # PAGE CONFIG
@@ -16,6 +17,8 @@ PRICE_LIST = {
     "bottle": 3.50,
     "cup": 2.00,
     "banana": 1.50,
+    # "apple": 2.00,
+    # "orange": 3.00,
 }
 
 # =========================
@@ -23,7 +26,7 @@ PRICE_LIST = {
 # =========================
 @st.cache_resource
 def load_model():
-    model = torch.hub.load("ultralytics/yolov5", "yolov5s", pretrained=True)
+    model = YOLO("yolov8n.pt")
     return model
 
 model = load_model()
@@ -49,22 +52,31 @@ def calculate_bill(detected_items):
             "subtotal": subtotal
         })
 
-    return item_counts, bill_rows, total_price
+    return bill_rows, total_price
 
 
 def detect_objects(image):
     results = model(image)
-    df = results.pandas().xyxy[0]
+    result = results[0]
 
+    rendered = result.plot()
     detected_items = []
-    for _, row in df.iterrows():
-        label = row["name"]
-        conf = row["confidence"]
+
+    rows = []
+    for box in result.boxes:
+        cls_id = int(box.cls[0].item())
+        conf = float(box.conf[0].item())
+        label = model.names[cls_id]
+
+        rows.append({
+            "name": label,
+            "confidence": round(conf, 4)
+        })
 
         if label in PRICE_LIST:
             detected_items.append(label)
 
-    rendered = np.squeeze(results.render())
+    df = pd.DataFrame(rows)
     return rendered, detected_items, df
 
 
@@ -101,11 +113,11 @@ if option == "Upload Image":
             st.image(image, use_container_width=True)
 
         rendered_img, detected_items, df = detect_objects(image_np)
-        _, bill_rows, total_price = calculate_bill(detected_items)
+        bill_rows, total_price = calculate_bill(detected_items)
 
         with col2:
             st.subheader("Detection Result")
-            st.image(rendered_img, channels="BGR", use_container_width=True)
+            st.image(rendered_img, use_container_width=True)
 
         st.subheader("Bill Summary")
         if bill_rows:
@@ -118,7 +130,7 @@ if option == "Upload Image":
             st.warning("No billable items detected.")
 
         with st.expander("Show Detection Table"):
-            st.dataframe(df)
+            st.dataframe(df, use_container_width=True)
 
 elif option == "Webcam Snapshot":
     camera_image = st.camera_input("Take a picture")
@@ -134,11 +146,11 @@ elif option == "Webcam Snapshot":
             st.image(image, use_container_width=True)
 
         rendered_img, detected_items, df = detect_objects(image_np)
-        _, bill_rows, total_price = calculate_bill(detected_items)
+        bill_rows, total_price = calculate_bill(detected_items)
 
         with col2:
             st.subheader("Detection Result")
-            st.image(rendered_img, channels="BGR", use_container_width=True)
+            st.image(rendered_img, use_container_width=True)
 
         st.subheader("Bill Summary")
         if bill_rows:
@@ -151,4 +163,4 @@ elif option == "Webcam Snapshot":
             st.warning("No billable items detected.")
 
         with st.expander("Show Detection Table"):
-            st.dataframe(df)
+            st.dataframe(df, use_container_width=True)

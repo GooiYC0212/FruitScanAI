@@ -196,6 +196,52 @@ def apply_custom_css(): st.markdown( """
         div[style*="background-color: #000"] {
             color: white !important;
         }
+
+        /* ===== 修复 DataFrame 黑色工具栏 ===== */
+        [data-testid="stDataFrame"] button,
+        [data-testid="stDataFrame"] span,
+        [data-testid="stDataFrame"] div {
+            color: white !important;
+        }
+        
+        /* DataFrame 顶部黑色 bar */
+        [data-testid="stDataFrame"] {
+            color: white !important;
+        }
+        
+        /* Fullscreen 按钮 */
+        button[title="Fullscreen"],
+        button[title="View fullscreen"] {
+            color: white !important;
+        }
+        
+        /* DataFrame hover toolbar */
+        div[data-testid="stDataFrame"] div[role="button"] {
+            color: white !important;
+        }
+        
+        /* ===== 修复 Camera 黑底按钮 ===== */
+        [data-testid="stCameraInput"] button {
+            background: #0f172a !important;
+            color: white !important;
+        }
+        
+        /* Take Photo 文字 */
+        [data-testid="stCameraInput"] span {
+            color: white !important;
+        }
+        
+        /* ===== 修复 uploader 小黑块（文件名框） ===== */
+        [data-testid="stFileUploader"] div[role="button"] span {
+            color: #0f172a !important;
+        }
+        
+        /* ===== 防止所有深色背景文字消失（终极保险） ===== */
+        div[style*="background-color: rgb(0, 0, 0)"],
+        div[style*="background-color: #000"],
+        div[style*="background: rgb(0, 0, 0)"] {
+            color: white !important;
+        }
         
         </style>
         """,

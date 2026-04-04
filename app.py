@@ -22,6 +22,7 @@ def apply_custom_css():
     st.markdown(
         """
         <style>
+        /* ========= App Background ========= */
         .stApp {
             background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
         }
@@ -32,13 +33,24 @@ def apply_custom_css():
             max-width: 1400px;
         }
 
+        /* ========= Force readable text globally ========= */
+        h1, h2, h3, h4, h5, h6,
+        p, span, label, div, small {
+            color: #0f172a;
+        }
+
+        /* ========= Hero ========= */
         .hero-card {
             background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #38bdf8 100%);
-            color: white;
+            color: white !important;
             padding: 28px 30px;
             border-radius: 22px;
             box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
             margin-bottom: 1rem;
+        }
+
+        .hero-card * {
+            color: white !important;
         }
 
         .hero-title {
@@ -54,6 +66,18 @@ def apply_custom_css():
             line-height: 1.6;
         }
 
+        .status-pill {
+            display: inline-block;
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.16);
+            border: 1px solid rgba(255,255,255,0.28);
+            font-size: 0.86rem;
+            margin-bottom: 0.8rem;
+            color: white !important;
+        }
+
+        /* ========= Cards ========= */
         .section-card {
             background: #ffffff;
             border: 1px solid rgba(37, 99, 235, 0.12);
@@ -73,33 +97,34 @@ def apply_custom_css():
 
         .label-text {
             font-size: 0.88rem;
-            color: #475569;
+            color: #475569 !important;
             margin-bottom: 0.3rem;
+            font-weight: 600;
         }
 
         .value-text {
             font-size: 1.55rem;
             font-weight: 800;
-            color: #0f172a;
-        }
-
-        .status-pill {
-            display: inline-block;
-            padding: 0.35rem 0.7rem;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.16);
-            border: 1px solid rgba(255,255,255,0.28);
-            font-size: 0.86rem;
-            margin-bottom: 0.8rem;
+            color: #0f172a !important;
         }
 
         .bill-title {
             font-size: 1.1rem;
             font-weight: 700;
-            color: #0f172a;
+            color: #0f172a !important;
             margin-bottom: 0.8rem;
         }
 
+        /* ========= Sidebar ========= */
+        section[data-testid="stSidebar"] {
+            background: linear-gradient(180deg, #f8fbff 0%, #edf4ff 100%);
+        }
+
+        section[data-testid="stSidebar"] * {
+            color: #0f172a !important;
+        }
+
+        /* ========= Streamlit Metric ========= */
         div[data-testid="stMetric"] {
             background: #ffffff;
             border: 1px solid rgba(15, 23, 42, 0.08);
@@ -108,6 +133,13 @@ def apply_custom_css():
             box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
         }
 
+        div[data-testid="stMetric"] label,
+        div[data-testid="stMetric"] div,
+        div[data-testid="stMetric"] span {
+            color: #0f172a !important;
+        }
+
+        /* ========= Tabs ========= */
         .stTabs [data-baseweb="tab-list"] {
             gap: 0.5rem;
         }
@@ -115,6 +147,53 @@ def apply_custom_css():
         .stTabs [data-baseweb="tab"] {
             border-radius: 12px;
             padding: 0.55rem 1rem;
+            background: #e8eefc;
+            color: #0f172a !important;
+            font-weight: 700;
+        }
+
+        .stTabs [aria-selected="true"] {
+            background: #2563eb !important;
+            color: white !important;
+        }
+
+        .stTabs [aria-selected="true"] * {
+            color: white !important;
+        }
+
+        /* ========= Uploader / Camera ========= */
+        [data-testid="stFileUploader"] label,
+        [data-testid="stCameraInput"] label,
+        [data-testid="stFileUploader"] div,
+        [data-testid="stCameraInput"] div,
+        [data-testid="stFileUploader"] small,
+        [data-testid="stCameraInput"] small {
+            color: #0f172a !important;
+        }
+
+        /* ========= Buttons / Inputs / Info ========= */
+        .stButton button,
+        .stDownloadButton button {
+            color: #0f172a !important;
+        }
+
+        .stSelectbox label,
+        .stRadio label,
+        .stSlider label,
+        .stTextInput label,
+        .stTextArea label,
+        .stNumberInput label {
+            color: #0f172a !important;
+        }
+
+        /* ========= Dataframe ========= */
+        [data-testid="stDataFrame"] div {
+            color: #0f172a !important;
+        }
+
+        /* ========= Caption / Markdown fix ========= */
+        .stCaption, .stMarkdown, .stText {
+            color: #0f172a !important;
         }
         </style>
         """,
@@ -137,7 +216,6 @@ PRICE_LIST = {
 # LOAD MODEL
 # =========================
 @st.cache_resource
-
 def load_model():
     return YOLO("yolov8n.pt")
 

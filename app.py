@@ -11,187 +11,118 @@ from ultralytics import YOLO
 st.set_page_config(
     page_title="Smart Retail Checkout",
     page_icon="🛒",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 # =========================
 # CUSTOM CSS
 # =========================
-st.markdown("""
-<style>
-/* ===== Global text visibility fix ===== */
-html, body, [class*="css"], [data-testid="stAppViewContainer"], 
-[data-testid="stSidebar"], [data-testid="stHeader"] {
-    color: #111827 !important;
-}
+def apply_custom_css():
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+        }
 
-/* Main app background */
-.stApp {
-    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
-    color: #111827 !important;
-}
+        .block-container {
+            padding-top: 1.5rem;
+            padding-bottom: 2rem;
+            max-width: 1400px;
+        }
 
-/* Sidebar */
-[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-}
+        .hero-card {
+            background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #38bdf8 100%);
+            color: white;
+            padding: 28px 30px;
+            border-radius: 22px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+            margin-bottom: 1rem;
+        }
 
-[data-testid="stSidebar"] * {
-    color: #f8fafc !important;
-}
+        .hero-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.35rem;
+            letter-spacing: -0.02em;
+        }
 
-[data-testid="stSidebar"] .stRadio label,
-[data-testid="stSidebar"] .stMarkdown,
-[data-testid="stSidebar"] .stSlider label {
-    color: #f8fafc !important;
-}
+        .hero-subtitle {
+            font-size: 1rem;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
 
-/* Block container spacing */
-.block-container {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-}
+        .section-card {
+            background: #ffffff;
+            border: 1px solid rgba(37, 99, 235, 0.12);
+            border-radius: 20px;
+            padding: 1rem 1.1rem;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+            margin-bottom: 1rem;
+        }
 
-/* Hero section */
-.hero-box {
-    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #38bdf8 100%);
-    padding: 28px 30px;
-    border-radius: 22px;
-    box-shadow: 0 10px 30px rgba(37, 99, 235, 0.20);
-    margin-bottom: 1.25rem;
-}
+        .mini-card {
+            background: white;
+            border-radius: 18px;
+            padding: 16px 18px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+        }
 
-.hero-title {
-    color: white !important;
-    font-size: 2rem;
-    font-weight: 800;
-    margin: 0;
-    line-height: 1.2;
-}
+        .label-text {
+            font-size: 0.88rem;
+            color: #475569;
+            margin-bottom: 0.3rem;
+        }
 
-.hero-subtitle {
-    color: rgba(255,255,255,0.92) !important;
-    font-size: 1rem;
-    margin-top: 8px;
-    margin-bottom: 0;
-}
+        .value-text {
+            font-size: 1.55rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
 
-/* Metric cards */
-.metric-card {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 20px;
-    padding: 22px 20px;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-    text-align: center;
-    min-height: 130px;
-}
+        .status-pill {
+            display: inline-block;
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.16);
+            border: 1px solid rgba(255,255,255,0.28);
+            font-size: 0.86rem;
+            margin-bottom: 0.8rem;
+        }
 
-.metric-label {
-    font-size: 0.95rem;
-    color: #475569 !important;
-    font-weight: 600;
-    margin-bottom: 12px;
-}
+        .bill-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.8rem;
+        }
 
-.metric-value {
-    font-size: 2rem;
-    color: #0f172a !important;
-    font-weight: 800;
-    margin: 0;
-}
+        div[data-testid="stMetric"] {
+            background: #ffffff;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            padding: 14px;
+            border-radius: 18px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+        }
 
-/* Section card */
-.section-card {
-    background: rgba(255, 255, 255, 0.88);
-    border: 1px solid #e5e7eb;
-    border-radius: 20px;
-    padding: 18px;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
-}
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 0.5rem;
+        }
 
-/* Receipt box */
-.receipt-box {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 18px;
-    padding: 18px 20px;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
-}
+        .stTabs [data-baseweb="tab"] {
+            border-radius: 12px;
+            padding: 0.55rem 1rem;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
-.receipt-title {
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: #0f172a !important;
-    margin-bottom: 12px;
-}
 
-.receipt-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px dashed #cbd5e1;
-    color: #1e293b !important;
-    font-size: 0.98rem;
-}
-
-.receipt-total {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 2px solid #0f172a;
-    font-size: 1.12rem;
-    font-weight: 800;
-    color: #0f172a !important;
-}
-
-/* Tabs */
-.stTabs [data-baseweb="tab-list"] {
-    gap: 10px;
-}
-
-.stTabs [data-baseweb="tab"] {
-    background: #e2e8f0;
-    color: #0f172a !important;
-    border-radius: 12px;
-    padding: 10px 18px;
-    font-weight: 700;
-}
-
-.stTabs [aria-selected="true"] {
-    background: #2563eb !important;
-    color: white !important;
-}
-
-/* Streamlit alerts */
-.stSuccess, .stInfo, .stWarning, .stAlert {
-    border-radius: 14px;
-}
-
-/* Dataframe container */
-[data-testid="stDataFrame"] {
-    border-radius: 16px;
-    overflow: hidden;
-}
-
-/* File uploader / camera box */
-[data-testid="stFileUploader"],
-[data-testid="stCameraInput"] {
-    background: rgba(255,255,255,0.75);
-    border: 1px solid #dbeafe;
-    border-radius: 16px;
-    padding: 8px;
-}
-
-/* Subheaders */
-h1, h2, h3, h4, h5, h6, p, label, div, span {
-    color: inherit;
-}
-</style>
-""", unsafe_allow_html=True)
+apply_custom_css()
 
 # =========================
 # PRICE LIST
@@ -200,16 +131,16 @@ PRICE_LIST = {
     "bottle": 3.50,
     "cup": 2.00,
     "banana": 1.50,
-    # "apple": 2.00,
-    # "orange": 3.00,
 }
 
 # =========================
 # LOAD MODEL
 # =========================
 @st.cache_resource
+
 def load_model():
     return YOLO("yolov8n.pt")
+
 
 model = load_model()
 
@@ -227,18 +158,20 @@ def calculate_bill(detected_items):
         unit_price = PRICE_LIST[item]
         subtotal = unit_price * qty
         total_price += subtotal
-        bill_rows.append({
-            "item": item,
-            "qty": qty,
-            "unit_price": unit_price,
-            "subtotal": subtotal
-        })
+        bill_rows.append(
+            {
+                "Item": item.title(),
+                "Quantity": qty,
+                "Unit Price (RM)": unit_price,
+                "Subtotal (RM)": subtotal,
+            }
+        )
 
     return bill_rows, total_price
 
 
-def detect_objects(image, conf_threshold=0.50):
-    results = model(image, conf=conf_threshold)
+def detect_objects(image, min_confidence=0.25):
+    results = model(image, conf=min_confidence)
     result = results[0]
 
     rendered = result.plot()
@@ -250,10 +183,13 @@ def detect_objects(image, conf_threshold=0.50):
         conf = float(box.conf[0].item())
         label = model.names[cls_id]
 
-        rows.append({
-            "name": label,
-            "confidence": round(conf, 4)
-        })
+        rows.append(
+            {
+                "Detected Item": label,
+                "Confidence": round(conf, 4),
+                "Billable": "Yes" if label in PRICE_LIST else "No",
+            }
+        )
 
         if label in PRICE_LIST:
             detected_items.append(label)
@@ -262,182 +198,150 @@ def detect_objects(image, conf_threshold=0.50):
     return rendered, detected_items, df
 
 
-def show_metric_card(label, value):
+def render_header():
     st.markdown(
-        f"""
-        <div class="metric-card">
-            <div class="metric-label">{label}</div>
-            <div class="metric-value">{value}</div>
+        """
+        <div class="hero-card">
+            <div class="status-pill">AI-powered Smart Retail Demo</div>
+            <div class="hero-title">Smart Retail Checkout System</div>
+            <div class="hero-subtitle">
+                Upload an image or use your webcam to detect retail items, preview object detection,
+                and generate an automatic checkout summary with total pricing.
+            </div>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
 
-def render_receipt(bill_rows, total_price):
-    if not bill_rows:
-        st.warning("No billable items detected.")
-        return
-
-    receipt_html = """
-    <div class="receipt-box">
-        <div class="receipt-title">🧾 Billing Summary</div>
-    """
-
-    for row in bill_rows:
-        receipt_html += f"""
-        <div class="receipt-row">
-            <div><strong>{row['item'].title()}</strong> × {row['qty']}</div>
-            <div>RM {row['subtotal']:.2f}</div>
-        </div>
-        """
-
-    receipt_html += f"""
-        <div class="receipt-total">
-            <div>Total Price</div>
-            <div>RM {total_price:.2f}</div>
-        </div>
-    </div>
-    """
-
-    st.markdown(receipt_html, unsafe_allow_html=True)
-
-
-# =========================
-# HERO HEADER
-# =========================
-st.markdown("""
-<div class="hero-box">
-    <div class="hero-title">🛒 Smart Retail Checkout System</div>
-    <div class="hero-subtitle">
-        Detect retail objects automatically and calculate the estimated bill in real time.
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-# =========================
-# SIDEBAR
-# =========================
-st.sidebar.markdown("## ⚙️ Control Panel")
-st.sidebar.write("Configure input method and detection settings.")
-
-option = st.sidebar.radio(
-    "Choose input type",
-    ["Upload Image", "Webcam Snapshot"]
-)
-
-conf_threshold = st.sidebar.slider(
-    "Confidence Threshold",
-    min_value=0.10,
-    max_value=1.00,
-    value=0.50,
-    step=0.05
-)
-
-st.sidebar.markdown("### 💰 Price List")
-price_df = pd.DataFrame(
-    [{"Item": k.title(), "Price (RM)": f"{v:.2f}"} for k, v in PRICE_LIST.items()]
-)
-st.sidebar.table(price_df)
-
-st.sidebar.markdown("---")
-st.sidebar.info(
-    "Tip: Increase the confidence threshold to reduce false detections."
-)
-
-# =========================
-# INPUT
-# =========================
-image = None
-image_label = "Original Image"
-
-st.markdown('<div class="section-card">', unsafe_allow_html=True)
-st.subheader("📥 Input Section")
-
-if option == "Upload Image":
-    uploaded_file = st.file_uploader(
-        "Upload an image",
-        type=["jpg", "jpeg", "png"]
+def render_price_list():
+    st.sidebar.markdown("## 🧾 Product Price List")
+    price_df = pd.DataFrame(
+        [{"Item": k.title(), "Price (RM)": f"{v:.2f}"} for k, v in PRICE_LIST.items()]
     )
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file).convert("RGB")
-        image_label = "Original Image"
-
-elif option == "Webcam Snapshot":
-    camera_image = st.camera_input("Take a picture")
-    if camera_image is not None:
-        image = Image.open(camera_image).convert("RGB")
-        image_label = "Captured Image"
-
-st.markdown('</div>', unsafe_allow_html=True)
+    st.sidebar.dataframe(price_df, use_container_width=True, hide_index=True)
 
 
-# =========================
-# MAIN PROCESS
-# =========================
-if image is not None:
+def render_sidebar_controls():
+    st.sidebar.markdown("## ⚙️ Input Settings")
+    input_mode = st.sidebar.radio(
+        "Choose image source",
+        ["Upload Image", "Webcam Snapshot"],
+        label_visibility="visible",
+    )
+    min_confidence = st.sidebar.slider(
+        "Confidence Threshold",
+        min_value=0.10,
+        max_value=0.90,
+        value=0.25,
+        step=0.05,
+    )
+    st.sidebar.info(
+        "Tip: use a clear image with good lighting so the detection boxes and bill summary look more accurate."
+    )
+    return input_mode, min_confidence
+
+
+def render_summary_cards(total_price, bill_rows, df):
+    detected_count = len(df) if not df.empty else 0
+    billable_count = sum(row["Quantity"] for row in bill_rows) if bill_rows else 0
+    unique_billable = len(bill_rows)
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Total Detected Objects", detected_count)
+    c2.metric("Billable Items", billable_count)
+    c3.metric("Estimated Total", f"RM {total_price:.2f}")
+
+    if unique_billable:
+        st.caption(f"Unique billable products: {unique_billable}")
+
+
+def render_bill_section(bill_rows, total_price):
+    st.markdown('<div class="bill-title">🧾 Checkout Summary</div>', unsafe_allow_html=True)
+
+    if bill_rows:
+        bill_df = pd.DataFrame(bill_rows)
+        for col in ["Unit Price (RM)", "Subtotal (RM)"]:
+            bill_df[col] = bill_df[col].map(lambda x: f"{x:.2f}")
+        st.dataframe(bill_df, use_container_width=True, hide_index=True)
+        st.success(f"Total Price: RM {total_price:.2f}")
+    else:
+        st.warning("No billable items detected in the current image.")
+
+
+def process_image(image_source, min_confidence, source_label):
+    image = Image.open(image_source).convert("RGB")
     image_np = np.array(image)
 
-    rendered_img, detected_items, df = detect_objects(image_np, conf_threshold)
+    rendered_img, detected_items, df = detect_objects(image_np, min_confidence)
     bill_rows, total_price = calculate_bill(detected_items)
 
-    total_detected_objects = len(df)
-    total_billable_quantity = sum(row["qty"] for row in bill_rows) if bill_rows else 0
-    unique_billable_items = len(bill_rows)
+    render_summary_cards(total_price, bill_rows, df)
 
-    # =========================
-    # METRICS
-    # =========================
-    st.markdown("### 📊 Detection Overview")
-    m1, m2, m3, m4 = st.columns(4)
-
-    with m1:
-        show_metric_card("Total Detected Objects", total_detected_objects)
-    with m2:
-        show_metric_card("Billable Quantity", total_billable_quantity)
-    with m3:
-        show_metric_card("Unique Billable Items", unique_billable_items)
-    with m4:
-        show_metric_card("Estimated Total", f"RM {total_price:.2f}")
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # =========================
-    # TABS
-    # =========================
-    tab1, tab2, tab3 = st.tabs(["🖼 Image Preview", "🧾 Billing Summary", "📋 Detection Table"])
+    tab1, tab2, tab3 = st.tabs(["🖼️ Image Preview", "🧾 Billing", "📊 Detection Data"])
 
     with tab1:
         col1, col2 = st.columns(2)
-
         with col1:
-            st.markdown('<div class="section-card">', unsafe_allow_html=True)
-            st.subheader(image_label)
+            st.markdown(f"### {source_label}")
             st.image(image, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
         with col2:
-            st.markdown('<div class="section-card">', unsafe_allow_html=True)
-            st.subheader("Detection Result")
+            st.markdown("### Detection Result")
             st.image(rendered_img, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
 
     with tab2:
-        render_receipt(bill_rows, total_price)
-
-        if bill_rows:
-            st.success(f"Checkout completed successfully. Total payable amount: RM {total_price:.2f}")
+        render_bill_section(bill_rows, total_price)
 
     with tab3:
-        st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.subheader("Detection Data")
-
+        st.markdown("### Detection Table")
         if not df.empty:
-            st.dataframe(df, use_container_width=True)
+            st.dataframe(df, use_container_width=True, hide_index=True)
         else:
-            st.info("No objects detected.")
+            st.info("No objects were detected.")
 
-        st.markdown('</div>', unsafe_allow_html=True)
+
+# =========================
+# APP LAYOUT
+# =========================
+render_header()
+input_mode, min_confidence = render_sidebar_controls()
+render_price_list()
+
+info_col1, info_col2, info_col3 = st.columns(3)
+with info_col1:
+    st.markdown(
+        '<div class="mini-card"><div class="label-text">Model</div><div class="value-text">YOLOv8</div></div>',
+        unsafe_allow_html=True,
+    )
+with info_col2:
+    st.markdown(
+        '<div class="mini-card"><div class="label-text">Function</div><div class="value-text">Auto Billing</div></div>',
+        unsafe_allow_html=True,
+    )
+with info_col3:
+    st.markdown(
+        '<div class="mini-card"><div class="label-text">Input</div><div class="value-text">Image / Camera</div></div>',
+        unsafe_allow_html=True,
+    )
+
+st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+
+if input_mode == "Upload Image":
+    uploaded_file = st.file_uploader(
+        "Upload a product image",
+        type=["jpg", "jpeg", "png"],
+        help="Supported formats: JPG, JPEG, PNG",
+    )
+    if uploaded_file is not None:
+        process_image(uploaded_file, min_confidence, "Original Image")
+    else:
+        st.info("Upload an image to start the smart checkout demo.")
 
 else:
-    st.info("Please upload an image or take a picture to start the smart checkout process.")
+    camera_image = st.camera_input("Take a picture for smart checkout")
+    if camera_image is not None:
+        process_image(camera_image, min_confidence, "Captured Image")
+    else:
+        st.info("Use your webcam to capture an image and preview the checkout result.")
+
+st.markdown("</div>", unsafe_allow_html=True)

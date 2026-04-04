@@ -351,37 +351,26 @@ st.sidebar.info(
 image = None
 image_label = "Original Image"
 
-input_col1, input_col2 = st.columns([1.25, 1])
+st.markdown('<div class="section-card">', unsafe_allow_html=True)
+st.subheader("📥 Input Section")
 
-with input_col1:
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.subheader("📥 Input Section")
+if option == "Upload Image":
+    uploaded_file = st.file_uploader(
+        "Upload an image",
+        type=["jpg", "jpeg", "png"]
+    )
+    if uploaded_file is not None:
+        image = Image.open(uploaded_file).convert("RGB")
+        image_label = "Original Image"
 
-    if option == "Upload Image":
-        uploaded_file = st.file_uploader(
-            "Upload an image",
-            type=["jpg", "jpeg", "png"]
-        )
-        if uploaded_file is not None:
-            image = Image.open(uploaded_file).convert("RGB")
-            image_label = "Original Image"
+elif option == "Webcam Snapshot":
+    camera_image = st.camera_input("Take a picture")
+    if camera_image is not None:
+        image = Image.open(camera_image).convert("RGB")
+        image_label = "Captured Image"
 
-    elif option == "Webcam Snapshot":
-        camera_image = st.camera_input("Take a picture")
-        if camera_image is not None:
-            image = Image.open(camera_image).convert("RGB")
-            image_label = "Captured Image"
+st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with input_col2:
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.subheader("ℹ️ System Overview")
-    st.write("This prototype uses YOLO object detection to identify products and estimate the total price automatically.")
-    st.write("Supported billable items in this demo:")
-    for item, price in PRICE_LIST.items():
-        st.write(f"- **{item.title()}** — RM {price:.2f}")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # =========================
 # MAIN PROCESS

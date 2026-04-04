@@ -229,6 +229,18 @@ def apply_custom_css():
         [data-testid="stCameraInput"] span {
             color: white !important;
         }
+
+                /* uploader 普通文字 */
+        [data-testid="stFileUploader"] small,
+        [data-testid="stFileUploader"] p {
+            color: #0f172a !important;
+        }
+        
+        /* uploader 文件名（黑底） */
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"],
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] * {
+            color: white !important;
+        }
         
         /* ========= Alerts ========= */
         .stAlert, .stInfo, .stSuccess, .stWarning {

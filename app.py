@@ -219,7 +219,17 @@ def apply_custom_css():
         button[style*="background: rgb(0, 0, 0)"] {
             color: white !important;
         }
-
+        /* ===== 修复 Camera 黑底按钮 ===== */
+        [data-testid="stCameraInput"] button {
+            background: #0f172a !important;
+            color: white !important;
+        }
+        
+        /* Take Photo 文字 */
+        [data-testid="stCameraInput"] span {
+            color: white !important;
+        }
+        
         /* ========= Alerts ========= */
         .stAlert, .stInfo, .stSuccess, .stWarning {
             border-radius: 12px;

@@ -246,12 +246,12 @@ apply_custom_css()
 # PRICE LIST
 # =========================
 PRICE_LIST = {
-    "bottle": 3.50,
-    "cup": 2.00,
-    "banana": 1.50,
     "apple": 2.50,
-    "pencil": 1.00,
-    "tie": 30.00,
+    "banana": 1.50,
+    "orange": 2.00,
+    "mango": 4.00,
+    "pineapple": 6.50,
+    "watermelon": 12.00
 }
 
 # =========================

@@ -22,6 +22,7 @@ def apply_custom_css():
     st.markdown(
         """
         <style>
+        /* ========= App Background ========= */
         .stApp {
             background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
         }
@@ -32,17 +33,19 @@ def apply_custom_css():
             max-width: 1400px;
         }
 
+        /* ========= Global Text ========= */
         h1, h2, h3, h4, h5, h6,
         p, span, label, div, small {
             color: #0f172a;
         }
 
+        /* ========= Hero ========= */
         .hero-card {
             background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #38bdf8 100%);
-            padding: 28px 30px;
-            border-radius: 22px;
-            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
-            margin-bottom: 1rem;
+            padding: 30px 32px;
+            border-radius: 24px;
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+            margin-bottom: 1.2rem;
         }
 
         .hero-card * {
@@ -50,7 +53,7 @@ def apply_custom_css():
         }
 
         .hero-title {
-            font-size: 2rem;
+            font-size: 2.15rem;
             font-weight: 800;
         }
 
@@ -60,27 +63,31 @@ def apply_custom_css():
         }
 
         .status-pill {
-            padding: 0.35rem 0.7rem;
+            display: inline-block;
+            padding: 0.38rem 0.78rem;
             border-radius: 999px;
             background: rgba(255,255,255,0.16);
             border: 1px solid rgba(255,255,255,0.28);
             color: white !important;
+            margin-bottom: 0.8rem;
         }
 
+        /* ========= Cards ========= */
         .section-card {
-            background: #ffffff;
+            background: rgba(255,255,255,0.82);
+            backdrop-filter: blur(10px);
             border: 1px solid rgba(37, 99, 235, 0.12);
-            border-radius: 20px;
-            padding: 1rem;
-            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+            border-radius: 24px;
+            padding: 1.1rem;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
         }
 
         .mini-card {
-            background: white;
-            border-radius: 18px;
-            padding: 16px;
-            border: 1px solid rgba(15, 23, 42, 0.08);
-            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            border-radius: 20px;
+            padding: 18px;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
         }
 
         .label-text {
@@ -89,30 +96,35 @@ def apply_custom_css():
         }
 
         .value-text {
-            font-size: 1.6rem;
+            font-size: 1.55rem;
             font-weight: 800;
             color: #0f172a !important;
         }
 
+        /* ========= Sidebar ========= */
         section[data-testid="stSidebar"] {
-            background: #f8fbff;
+            background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+            border-right: 1px solid rgba(15, 23, 42, 0.05);
         }
 
         section[data-testid="stSidebar"] * {
             color: #0f172a !important;
         }
 
+        /* ========= Metrics ========= */
         div[data-testid="stMetric"] {
             background: #ffffff;
             border-radius: 18px;
             padding: 14px;
             border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
         }
 
         div[data-testid="stMetric"] * {
             color: #0f172a !important;
         }
 
+        /* ========= Tabs ========= */
         .stTabs [data-baseweb="tab"] {
             background: #e8eefc;
             border-radius: 12px;
@@ -124,86 +136,139 @@ def apply_custom_css():
         .stTabs [aria-selected="true"] {
             background: #2563eb !important;
             color: white !important;
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
         }
 
         .stTabs [aria-selected="true"] * {
             color: white !important;
         }
 
+        /* ========= Upload Image ========= */
         [data-testid="stFileUploader"] {
-            background: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 16px !important;
-            padding: 12px !important;
-            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
+            border: 1px solid #dbe7ff !important;
+            border-radius: 22px !important;
+            padding: 16px !important;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
         }
 
         [data-testid="stFileUploader"] section {
-            background: #ffffff !important;
+            background: transparent !important;
         }
 
         [data-testid="stFileUploader"] label,
         [data-testid="stFileUploader"] small {
             color: #0f172a !important;
+            font-weight: 600;
         }
 
-        [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"],
-        [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] * {
+        [data-testid="stFileUploaderDropzone"] {
+            background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%) !important;
+            border: 2px dashed #bfd4ff !important;
+            border-radius: 18px !important;
+            padding: 18px !important;
+            transition: all 0.2s ease-in-out;
+        }
+
+        [data-testid="stFileUploaderDropzone"]:hover {
+            border-color: #3b82f6 !important;
+            background: #f4f8ff !important;
+        }
+
+        [data-testid="stFileUploaderFile"] {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+            border-radius: 14px !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+            padding: 6px 10px !important;
+        }
+
+        [data-testid="stFileUploaderFile"] * {
             color: white !important;
         }
 
-        [data-testid="stFileUploader"] section button,
-        [data-testid="stFileUploader"] section button * {
+        [data-testid="stFileUploaderFile"] button {
+            background: rgba(255,255,255,0.14) !important;
+            border: 1px solid rgba(255,255,255,0.22) !important;
+            border-radius: 999px !important;
+            width: 28px !important;
+            height: 28px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
             color: white !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        [data-testid="stFileUploaderFile"] button:hover {
+            background: #ef4444 !important;
+            border-color: #ef4444 !important;
+            transform: scale(1.05);
+        }
+
+        [data-testid="stFileUploaderFile"] button svg {
+            fill: white !important;
+            color: white !important;
+            width: 16px !important;
+            height: 16px !important;
+        }
+
+        [data-testid="stFileUploader"] section button {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 12px !important;
+            padding: 0.55rem 1rem !important;
+            font-weight: 700 !important;
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
+        }
+
+        [data-testid="stFileUploader"] section button:hover {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
         }
 
         [data-testid="stFileUploader"] svg {
-            color: #0f172a !important;
-            fill: #0f172a !important;
+            color: #2563eb !important;
+            fill: #2563eb !important;
         }
 
+        /* ========= Camera ========= */
         [data-testid="stCameraInput"] {
             background: #ffffff !important;
             border-radius: 16px;
             padding: 10px;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
         }
 
         [data-testid="stCameraInput"] * {
             color: #0f172a !important;
         }
 
-        .stButton button {
-            color: #0f172a !important;
-        }
-
-        [data-testid="stDataFrame"] div {
-            color: #0f172a !important;
-        }
-
-        button[title="Fullscreen"],
-        button[title="View fullscreen"],
-        [data-testid="stElementToolbarButton"],
-        [data-testid="stElementToolbarButton"] * {
-            color: white !important;
-            fill: white !important;
-        }
-
-        div[role="tooltip"],
-        div[role="tooltip"] * {
-            color: white !important;
-        }
-
         [data-testid="stCameraInput"] button {
             background: #0f172a !important;
             color: white !important;
+            border-radius: 12px !important;
         }
 
         [data-testid="stCameraInput"] span {
             color: white !important;
         }
 
+        /* ========= Dataframe ========= */
+        [data-testid="stDataFrame"] {
+            border-radius: 16px !important;
+            overflow: hidden !important;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+        }
+
+        [data-testid="stDataFrame"] div {
+            color: #0f172a !important;
+        }
+
+        /* ========= Alerts ========= */
         .stAlert, .stInfo, .stSuccess, .stWarning {
-            border-radius: 12px;
+            border-radius: 14px;
         }
         </style>
         """,
@@ -221,7 +286,7 @@ PRICE_LIST = {
     "orange": 2.00,
     "mango": 4.00,
     "pineapple": 6.50,
-    "watermelon": 12.00
+    "watermelon": 12.00,
 }
 
 # =========================
@@ -229,7 +294,8 @@ PRICE_LIST = {
 # =========================
 @st.cache_resource
 def load_model():
-    return YOLO("models/best.pt")  # 改成你的模型路径
+    return YOLO("models/best.pt")
+
 
 model = load_model()
 
@@ -274,7 +340,7 @@ def detect_objects(image, min_confidence=0.25):
 
         rows.append(
             {
-                "Detected Item": label,
+                "Detected Item": label.title(),
                 "Confidence": round(conf, 4),
                 "Billable": "Yes" if label in PRICE_LIST else "No",
             }
@@ -295,7 +361,7 @@ def render_header():
             <div class="hero-title">FruitScan AI</div>
             <div class="hero-subtitle">
                 Upload at least 3 fruit images or use your webcam to detect fruits,
-                preview detection results, and generate one combined billing summary.
+                preview results, and generate one combined billing summary automatically.
             </div>
         </div>
         """,
@@ -316,7 +382,6 @@ def render_sidebar_controls():
     input_mode = st.sidebar.radio(
         "Choose image source",
         ["Upload Images", "Webcam Snapshot"],
-        label_visibility="visible",
     )
     min_confidence = st.sidebar.slider(
         "Confidence Threshold",
@@ -355,7 +420,7 @@ def render_bill_section(bill_rows, total_price):
         st.dataframe(bill_df, use_container_width=True, hide_index=True)
         st.success(f"Total Price: RM {total_price:.2f}")
     else:
-        st.warning("No billable fruits detected in the uploaded images.")
+        st.warning("No billable fruits detected in the current input.")
 
 
 def process_multiple_images(uploaded_files, min_confidence):
@@ -380,7 +445,6 @@ def process_multiple_images(uploaded_files, min_confidence):
                 "index": i,
                 "original_image": image,
                 "rendered_image": rendered_img,
-                "detected_items": detected_items,
             }
         )
 
@@ -464,7 +528,7 @@ with info_col2:
     )
 with info_col3:
     st.markdown(
-        '<div class="mini-card"><div class="label-text">Input</div><div class="value-text">Multiple Images</div></div>',
+        '<div class="mini-card"><div class="label-text">Input</div><div class="value-text">Multi Image / Camera</div></div>',
         unsafe_allow_html=True,
     )
 

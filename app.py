@@ -260,7 +260,6 @@ def apply_custom_css():
             color: #0f172a !important;
         }
 
-        /* uploaded file chip -> white text */
         [data-testid="stFileUploaderFile"] {
             background: #0f172a !important;
             border: 1px solid #1e293b !important;
@@ -395,11 +394,13 @@ PRICE_LIST = {
 }
 
 YOLO_MODEL_PATH = "models/best.pt"
-YOLO_DRIVE_URL = "https://drive.google.com/uc?export=download&id=1onDCGuzge1fYdVtJifxHwUDk4Zhpgncg"
+YOLO_URL = "https://huggingface.co/Gooi0212/fruit-detection-models/resolve/main/best.pt"
+
 FRCNN_MODEL_PATH = "models/fasterrcnn_fruit.pth"
-FRCNN_DRIVE_URL = "https://drive.google.com/uc?export=download&id=1fcqjporjX9IKuA-YQNR3vwqo8mj_Xncm"
+FRCNN_URL = "https://huggingface.co/Gooi0212/fruit-detection-models/resolve/main/fasterrcnn_fruit.pth"
+
 SSD_MODEL_PATH = "models/ssd_fruit.pth"
-SSD_DRIVE_URL = "https://drive.google.com/uc?export=download&id=1ft9Yr5UbPBnWjIeDHo6JOIQM2jf46QGj"
+SSD_URL = "https://huggingface.co/Gooi0212/fruit-detection-models/resolve/main/ssd_fruit.pth"
 
 # =========================
 # HELPERS
@@ -472,56 +473,58 @@ def draw_boxes_pil(image_np, boxes, labels, scores):
     return np.array(image_pil)
 
 
-def download_from_drive(url, save_path):
+def download_file(url, save_path):
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
-    session = requests.Session()
-    response = session.get(url, stream=True)
-
-    for key, value in response.cookies.items():
-        if key.startswith("download_warning"):
-            confirm_url = url + "&confirm=" + value
-            response = session.get(confirm_url, stream=True)
-            break
+    response = requests.get(url, stream=True, timeout=120)
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"Failed to download {os.path.basename(save_path)}. "
+            f"HTTP status code: {response.status_code}"
+        )
 
     total_size = int(response.headers.get("content-length", 0))
-    progress = st.progress(0, text=f"Downloading {os.path.basename(save_path)}...")
+    progress_text = f"Downloading {os.path.basename(save_path)}..."
+    progress_bar = st.progress(0, text=progress_text)
 
     downloaded = 0
+    chunk_size = 1024 * 1024
 
     with open(save_path, "wb") as f:
-        for chunk in response.iter_content(1024 * 1024):
+        for chunk in response.iter_content(chunk_size=chunk_size):
             if chunk:
                 f.write(chunk)
                 downloaded += len(chunk)
 
                 if total_size > 0:
                     percent = min(downloaded / total_size, 1.0)
-                    progress.progress(
+                    progress_bar.progress(
                         percent,
-                        text=f"Downloading {os.path.basename(save_path)}... {int(percent * 100)}%"
+                        text=f"{progress_text} {int(percent * 100)}%"
                     )
 
-    progress.empty()
+    progress_bar.empty()
+
 
 def ensure_model(path, url):
     if not os.path.exists(path):
-        st.warning(f"{os.path.basename(path)} not found. Downloading from Google Drive...")
-        download_from_drive(url, path)
+        st.warning(f"{os.path.basename(path)} not found. Downloading from Hugging Face...")
+        download_file(url, path)
+
 
 # =========================
 # LOAD MODELS
 # =========================
 @st.cache_resource
 def load_yolo():
-    ensure_model(YOLO_MODEL_PATH, YOLO_DRIVE_URL)
+    ensure_model(YOLO_MODEL_PATH, YOLO_URL)
     model = YOLO(YOLO_MODEL_PATH)
     return model
 
 
 @st.cache_resource
 def load_frcnn():
-    ensure_model(FRCNN_MODEL_PATH, FRCNN_DRIVE_URL)
+    ensure_model(FRCNN_MODEL_PATH, FRCNN_URL)
 
     model = torchvision.models.detection.fasterrcnn_resnet50_fpn(
         weights=None,
@@ -540,7 +543,7 @@ def load_frcnn():
 
 @st.cache_resource
 def load_ssd():
-    ensure_model(SSD_MODEL_PATH, SSD_DRIVE_URL)
+    ensure_model(SSD_MODEL_PATH, SSD_URL)
 
     model = torchvision.models.detection.ssd300_vgg16(
         weights=None,
@@ -563,6 +566,7 @@ def get_selected_model(model_choice):
     if model_choice == "Faster R-CNN":
         return load_frcnn()
     return load_ssd()
+
 
 # =========================
 # DETECTION FUNCTIONS
@@ -971,7 +975,6 @@ def compare_all_models_multiple_images(image_files, min_confidence):
     model_names = ["YOLO", "Faster R-CNN", "SSD"]
     comparison_rows = []
 
-    # ===== overall metrics across all uploaded images =====
     for model_name in model_names:
         total_detected_objects = 0
         total_billable_items = 0
@@ -1029,7 +1032,6 @@ def compare_all_models_multiple_images(image_files, min_confidence):
     c2.metric("Fastest Model", fastest_model)
     c3.metric("Most Detected Objects", most_detected_model)
 
-    # ===== keep visual comparison feature =====
     st.markdown("### 🖼️ Detection Result Comparison")
 
     selected_image_name = st.selectbox(
@@ -1096,6 +1098,7 @@ def compare_all_models_multiple_images(image_files, min_confidence):
         f"{fastest_model} was the fastest model. "
         f"{most_detected_model} detected the most objects."
     )
+
 
 # =========================
 # UI RENDER
@@ -1184,6 +1187,7 @@ def render_bill_section(bill_rows, total_price):
         st.success(f"Total Price: RM {total_price:.2f}")
     else:
         st.warning("No billable items detected in the current image.")
+
 
 # =========================
 # APP

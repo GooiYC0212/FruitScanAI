@@ -3,7 +3,7 @@ ultralytics
 opencv-python-headless
 pillow
 pandas
-numpy
+numpy<2
 torch
 torchvision
 requests

@@ -5,7 +5,6 @@ import pandas as pd
 import torch
 from collections import Counter
 from PIL import Image, ImageDraw, ImageFont
-from ultralytics import YOLO
 import torchvision
 import os
 import time
@@ -517,6 +516,7 @@ def ensure_model(path, url):
 # =========================
 @st.cache_resource
 def load_yolo():
+    from ultralytics import YOLO
     ensure_model(YOLO_MODEL_PATH, YOLO_URL)
     model = YOLO(YOLO_MODEL_PATH)
     return model

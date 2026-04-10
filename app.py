@@ -504,6 +504,10 @@ def download_from_drive(url, save_path):
 
     progress.empty()
 
+def ensure_model(path, url):
+    if not os.path.exists(path):
+        st.warning(f"Downloading {os.path.basename(path)}... (First run only, please wait ⏳)")
+        download_from_drive(url, path)
 
 def ensure_model(path, url):
     if not os.path.exists(path):

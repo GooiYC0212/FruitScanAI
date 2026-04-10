@@ -320,7 +320,7 @@ PRICE_LIST = {
 }
 
 YOLO_MODEL_PATH = "models/best.pt"
-YOLO_DRIVE_URL = "https://drive.google.com/uc?id=1onDCGuzge1fYdVtJifxHwUDk4Zhpgncg"
+YOLO_DRIVE_URL = "https://drive.google.com/uc?export=download&id=1onDCGuzge1fYdVtJifxHwUDk4Zhpgncg"
 FRCNN_MODEL_PATH = "models/fasterrcnn_fruit.pth"
 FRCNN_DRIVE_URL = "https://drive.google.com/uc?export=download&id=1fcqjporjX9IKuA-YQNR3vwqo8mj_Xncm"
 SSD_MODEL_PATH = "models/ssd_fruit.pth"
@@ -396,7 +396,37 @@ def draw_boxes_pil(image_np, boxes, labels, scores):
         draw.text((text_x1 + 4, text_y1 + 3), text, fill="white", font=font)
 
     return np.array(image_pil)
+def download_from_drive(url, save_path):
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
+    response = requests.get(url, stream=True, timeout=120)
+    response.raise_for_status()
+
+    total_size = int(response.headers.get("content-length", 0))
+    progress = st.progress(0, text=f"Downloading {os.path.basename(save_path)}...")
+
+    downloaded = 0
+
+    with open(save_path, "wb") as f:
+        for chunk in response.iter_content(chunk_size=1024 * 1024):
+            if chunk:
+                f.write(chunk)
+                downloaded += len(chunk)
+
+                if total_size > 0:
+                    percent = min(downloaded / total_size, 1.0)
+                    progress.progress(
+                        percent,
+                        text=f"Downloading {os.path.basename(save_path)}... {int(percent * 100)}%"
+                    )
+
+    progress.empty()
+
+def ensure_model(path, url):
+    if not os.path.exists(path):
+        st.warning(f"{os.path.basename(path)} not found. Downloading from Google Drive...")
+        download_from_drive(url, path)
+        
 # =========================
 # LOAD MODELS
 # =========================

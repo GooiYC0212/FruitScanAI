@@ -1,14 +1,15 @@
-import os
-from collections import Counter
-
-import gdown
+import requests
+import streamlit as st
 import numpy as np
 import pandas as pd
-import streamlit as st
 import torch
-import torchvision
+from collections import Counter
 from PIL import Image, ImageDraw, ImageFont
 from ultralytics import YOLO
+import torchvision
+import os
+import time
+import matplotlib.pyplot as plt
 
 # =========================
 # PAGE CONFIG
@@ -123,18 +124,44 @@ def apply_custom_css():
             border: 1px solid #cbd5e1 !important;
         }
 
-        div[data-baseweb="select"] span {
+        div[data-baseweb="select"] * {
+            color: #0f172a !important;
+            fill: #0f172a !important;
+        }
+
+        div[data-baseweb="popover"] {
+            background: #ffffff !important;
+        }
+
+        div[data-baseweb="popover"] * {
             color: #0f172a !important;
         }
 
         ul[role="listbox"] {
             background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        li[role="option"] {
+            background: #ffffff !important;
             color: #0f172a !important;
         }
 
-        ul[role="listbox"] li,
-        ul[role="listbox"] li * {
+        li[role="option"] * {
             color: #0f172a !important;
+        }
+
+        li[role="option"]:hover {
+            background: #e0e7ff !important;
+        }
+
+        li[aria-selected="true"] {
+            background: #dbeafe !important;
+        }
+
+        li[aria-selected="true"] * {
+            color: #0f172a !important;
+            font-weight: 700 !important;
         }
 
         div[role="radiogroup"] label,
@@ -205,22 +232,69 @@ def apply_custom_css():
 
         [data-testid="stFileUploaderDropzone"] {
             background: #ffffff !important;
+            border-radius: 14px !important;
         }
 
-        [data-testid="stFileUploaderFile"] {
-            background: #0f172a !important;
-            border-radius: 10px !important;
+        [data-testid="stFileUploaderDropzone"]:hover {
+            border: 2px dashed #2563eb !important;
+            background: #f8fbff !important;
         }
 
-        [data-testid="stFileUploaderFile"],
-        [data-testid="stFileUploaderFile"] * {
+        [data-testid="stFileUploaderDropzone"] button {
+            background: #2563eb !important;
             color: #ffffff !important;
+            border: none !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
         }
 
-        [data-testid="stFileUploaderFile"] button,
-        [data-testid="stFileUploaderFile"] button * {
+        [data-testid="stFileUploaderDropzone"] button * {
             color: #ffffff !important;
             fill: #ffffff !important;
+        }
+
+        [data-testid="stFileUploaderDropzone"] small,
+        [data-testid="stFileUploaderDropzone"] span,
+        [data-testid="stFileUploaderDropzone"] div,
+        [data-testid="stFileUploaderDropzone"] p {
+            color: #0f172a !important;
+        }
+
+        /* uploaded file chip -> white text */
+        [data-testid="stFileUploaderFile"] {
+            background: #0f172a !important;
+            border: 1px solid #1e293b !important;
+            border-radius: 12px !important;
+        }
+
+        [data-testid="stFileUploaderFile"] * {
+            color: #ffffff !important;
+            fill: #ffffff !important;
+        }
+
+        [data-testid="stFileUploaderFileName"] {
+            color: #ffffff !important;
+            font-weight: 600 !important;
+        }
+
+        [data-testid="stFileUploaderFileData"] {
+            color: #e2e8f0 !important;
+        }
+
+        [data-testid="stFileUploaderFile"] button {
+            background: transparent !important;
+            color: #ef4444 !important;
+            border: none !important;
+        }
+
+        [data-testid="stFileUploaderFile"] button * {
+            color: #ef4444 !important;
+            fill: #ef4444 !important;
+        }
+
+        [data-testid="stFileUploader"] svg {
+            color: #2563eb !important;
+            fill: #2563eb !important;
         }
 
         [data-testid="stCameraInput"] {
@@ -317,18 +391,14 @@ PRICE_LIST = {
     "orange": 2.20,
     "mango": 4.00,
     "pineapple": 5.50,
-    "watermelon": 8.00,
+    "watermelon": 8.00
 }
 
-MODELS_DIR = "models"
-
-YOLO_MODEL_PATH = os.path.join(MODELS_DIR, "best.pt")
+YOLO_MODEL_PATH = "models/best.pt"
 YOLO_DRIVE_URL = "https://drive.google.com/uc?export=download&id=1onDCGuzge1fYdVtJifxHwUDk4Zhpgncg"
-
-FRCNN_MODEL_PATH = os.path.join(MODELS_DIR, "fasterrcnn_fruit.pth")
+FRCNN_MODEL_PATH = "models/fasterrcnn_fruit.pth"
 FRCNN_DRIVE_URL = "https://drive.google.com/uc?export=download&id=1fcqjporjX9IKuA-YQNR3vwqo8mj_Xncm"
-
-SSD_MODEL_PATH = os.path.join(MODELS_DIR, "ssd_fruit.pth")
+SSD_MODEL_PATH = "models/ssd_fruit.pth"
 SSD_DRIVE_URL = "https://drive.google.com/uc?export=download&id=1ft9Yr5UbPBnWjIeDHo6JOIQM2jf46QGj"
 
 # =========================
@@ -341,6 +411,7 @@ def extract_state_dict(checkpoint):
         if "state_dict" in checkpoint:
             return checkpoint["state_dict"]
     return checkpoint
+
 
 def calculate_bill(detected_items):
     filtered_items = [item for item in detected_items if item in PRICE_LIST]
@@ -364,6 +435,7 @@ def calculate_bill(detected_items):
 
     return bill_rows, total_price
 
+
 def draw_boxes_pil(image_np, boxes, labels, scores):
     image_pil = Image.fromarray(image_np).convert("RGB")
     draw = ImageDraw.Draw(image_pil)
@@ -378,6 +450,7 @@ def draw_boxes_pil(image_np, boxes, labels, scores):
         x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
 
         text = f"{label} {score:.2f}"
+
         draw.rectangle([x1, y1, x2, y2], outline="red", width=4)
 
         try:
@@ -398,51 +471,44 @@ def draw_boxes_pil(image_np, boxes, labels, scores):
 
     return np.array(image_pil)
 
-def validate_downloaded_model(path):
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Downloaded model file not found: {path}")
-
-    if os.path.getsize(path) == 0:
-        raise RuntimeError(f"Downloaded file is empty: {os.path.basename(path)}")
-
-    with open(path, "rb") as f:
-        head = f.read(300).lower()
-
-    if b"<html" in head or b"<!doctype html" in head or b"<head" in head:
-        os.remove(path)
-        raise RuntimeError(
-            f"Downloaded file for {os.path.basename(path)} is HTML, not a valid model. "
-            "Check Google Drive sharing settings and direct download link."
-        )
 
 def download_from_drive(url, save_path):
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
-    progress_placeholder = st.empty()
-    progress_placeholder.info(f"Downloading {os.path.basename(save_path)} from Google Drive... Please wait.")
+    session = requests.Session()
+    response = session.get(url, stream=True)
 
-    try:
-        output = gdown.download(url=url, output=save_path, quiet=False, fuzzy=True)
-        if output is None:
-            raise RuntimeError(f"Failed to download {os.path.basename(save_path)} from Google Drive.")
+    for key, value in response.cookies.items():
+        if key.startswith("download_warning"):
+            confirm_url = url + "&confirm=" + value
+            response = session.get(confirm_url, stream=True)
+            break
 
-        validate_downloaded_model(save_path)
-    except Exception:
-        if os.path.exists(save_path):
-            os.remove(save_path)
-        raise
-    finally:
-        progress_placeholder.empty()
+    total_size = int(response.headers.get("content-length", 0))
+    progress = st.progress(0, text=f"Downloading {os.path.basename(save_path)}...")
+
+    downloaded = 0
+
+    with open(save_path, "wb") as f:
+        for chunk in response.iter_content(1024 * 1024):
+            if chunk:
+                f.write(chunk)
+                downloaded += len(chunk)
+
+                if total_size > 0:
+                    percent = min(downloaded / total_size, 1.0)
+                    progress.progress(
+                        percent,
+                        text=f"Downloading {os.path.basename(save_path)}... {int(percent * 100)}%"
+                    )
+
+    progress.empty()
+
 
 def ensure_model(path, url):
-    if os.path.exists(path):
-        return
-
-    st.warning(f"{os.path.basename(path)} not found. Downloading from Google Drive...")
-    download_from_drive(url, path)
-
     if not os.path.exists(path):
-        raise FileNotFoundError(f"Failed to download model file: {path}")
+        st.warning(f"{os.path.basename(path)} not found. Downloading from Google Drive...")
+        download_from_drive(url, path)
 
 # =========================
 # LOAD MODELS
@@ -453,6 +519,7 @@ def load_yolo():
     model = YOLO(YOLO_MODEL_PATH)
     return model
 
+
 @st.cache_resource
 def load_frcnn():
     ensure_model(FRCNN_MODEL_PATH, FRCNN_DRIVE_URL)
@@ -460,16 +527,17 @@ def load_frcnn():
     model = torchvision.models.detection.fasterrcnn_resnet50_fpn(
         weights=None,
         weights_backbone=None,
-        num_classes=len(CLASSES) + 1,
+        num_classes=len(CLASSES) + 1
     )
 
-    checkpoint = torch.load(FRCNN_MODEL_PATH, map_location=DEVICE)
+    checkpoint = torch.load(FRCNN_MODEL_PATH, map_location=DEVICE, weights_only=False)
     state_dict = extract_state_dict(checkpoint)
     model.load_state_dict(state_dict)
 
     model.to(DEVICE)
     model.eval()
     return model
+
 
 @st.cache_resource
 def load_ssd():
@@ -478,16 +546,17 @@ def load_ssd():
     model = torchvision.models.detection.ssd300_vgg16(
         weights=None,
         weights_backbone=None,
-        num_classes=len(CLASSES) + 1,
+        num_classes=len(CLASSES) + 1
     )
 
-    checkpoint = torch.load(SSD_MODEL_PATH, map_location=DEVICE)
+    checkpoint = torch.load(SSD_MODEL_PATH, map_location=DEVICE, weights_only=False)
     state_dict = extract_state_dict(checkpoint)
     model.load_state_dict(state_dict)
 
     model.to(DEVICE)
     model.eval()
     return model
+
 
 def get_selected_model(model_choice):
     if model_choice == "YOLO":
@@ -526,7 +595,8 @@ def detect_with_yolo(model, image_np, min_confidence):
     df = pd.DataFrame(rows)
     return rendered, detected_items, df
 
-def detect_with_frcnn(model, image_np, min_confidence, debug_mode=False):
+
+def detect_with_frcnn(model, image_np, min_confidence):
     image_tensor = torch.from_numpy(image_np).permute(2, 0, 1).float() / 255.0
     image_tensor = image_tensor.to(DEVICE)
 
@@ -536,10 +606,6 @@ def detect_with_frcnn(model, image_np, min_confidence, debug_mode=False):
     boxes = outputs["boxes"].detach().cpu().numpy()
     scores = outputs["scores"].detach().cpu().numpy()
     labels_tensor = outputs["labels"].detach().cpu().numpy()
-
-    if debug_mode:
-        st.write("Faster R-CNN raw scores:", scores[:10])
-        st.write("Faster R-CNN raw labels:", labels_tensor[:10])
 
     detected_items = []
     rows = []
@@ -576,7 +642,8 @@ def detect_with_frcnn(model, image_np, min_confidence, debug_mode=False):
     df = pd.DataFrame(rows)
     return rendered, detected_items, df
 
-def detect_with_ssd(model, image_np, min_confidence, debug_mode=False):
+
+def detect_with_ssd(model, image_np, min_confidence):
     image_tensor = torch.from_numpy(image_np).permute(2, 0, 1).float() / 255.0
     image_tensor = image_tensor.to(DEVICE)
 
@@ -586,10 +653,6 @@ def detect_with_ssd(model, image_np, min_confidence, debug_mode=False):
     boxes = outputs["boxes"].detach().cpu().numpy()
     scores = outputs["scores"].detach().cpu().numpy()
     labels_tensor = outputs["labels"].detach().cpu().numpy()
-
-    if debug_mode:
-        st.write("SSD raw scores:", scores[:20])
-        st.write("SSD raw labels:", labels_tensor[:20])
 
     detected_items = []
     rows = []
@@ -634,14 +697,406 @@ def detect_with_ssd(model, image_np, min_confidence, debug_mode=False):
     df = pd.DataFrame(rows)
     return rendered, detected_items, df
 
-def detect_objects(image_np, model_choice, min_confidence, debug_mode=False):
+
+def detect_objects(image_np, model_choice, min_confidence):
     model = get_selected_model(model_choice)
 
     if model_choice == "YOLO":
         return detect_with_yolo(model, image_np, min_confidence)
     if model_choice == "Faster R-CNN":
-        return detect_with_frcnn(model, image_np, min_confidence, debug_mode)
-    return detect_with_ssd(model, image_np, min_confidence, debug_mode)
+        return detect_with_frcnn(model, image_np, min_confidence)
+    return detect_with_ssd(model, image_np, min_confidence)
+
+
+def summarize_detection_result(model_name, df, detected_items, total_price, elapsed_time):
+    if df is None or df.empty:
+        return {
+            "Model": model_name,
+            "Detected Objects": 0,
+            "Billable Items": 0,
+            "Avg Confidence": 0.0,
+            "Max Confidence": 0.0,
+            "Inference Time (s)": round(elapsed_time, 4),
+            "Estimated Total (RM)": round(total_price, 2),
+        }
+
+    avg_conf = float(df["Confidence"].mean()) if "Confidence" in df.columns else 0.0
+    max_conf = float(df["Confidence"].max()) if "Confidence" in df.columns else 0.0
+
+    return {
+        "Model": model_name,
+        "Detected Objects": int(len(df)),
+        "Billable Items": int(len(detected_items)),
+        "Avg Confidence": round(avg_conf, 4),
+        "Max Confidence": round(max_conf, 4),
+        "Inference Time (s)": round(elapsed_time, 4),
+        "Estimated Total (RM)": round(total_price, 2),
+    }
+
+
+def plot_bar_chart(df, x_col, y_col, title, ylabel):
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.bar(df[x_col], df[y_col])
+    ax.set_title(title)
+    ax.set_xlabel("Model")
+    ax.set_ylabel(ylabel)
+    ax.grid(axis="y", linestyle="--", alpha=0.4)
+    st.pyplot(fig)
+
+
+def compare_all_models(image_source, min_confidence):
+    image = Image.open(image_source).convert("RGB")
+    image_np = np.array(image)
+
+    model_names = ["YOLO", "Faster R-CNN", "SSD"]
+    comparison_rows = []
+    rendered_results = {}
+
+    for model_name in model_names:
+        start_time = time.perf_counter()
+
+        rendered_img, detected_items, df = detect_objects(
+            image_np, model_name, min_confidence
+        )
+
+        elapsed_time = time.perf_counter() - start_time
+        bill_rows, total_price = calculate_bill(detected_items)
+
+        summary = summarize_detection_result(
+            model_name=model_name,
+            df=df,
+            detected_items=detected_items,
+            total_price=total_price,
+            elapsed_time=elapsed_time,
+        )
+
+        comparison_rows.append(summary)
+        rendered_results[model_name] = {
+            "image": rendered_img,
+            "df": df,
+            "bill_rows": bill_rows,
+            "total_price": total_price,
+            "detected_items": detected_items,
+        }
+
+    comparison_df = pd.DataFrame(comparison_rows)
+
+    st.markdown("## 📊 Object Detection Model Comparison")
+    st.caption(
+        "Compare YOLO, Faster R-CNN, and SSD on the same uploaded image using detected object count, confidence score, inference time, and billing result."
+    )
+
+    best_conf_model = comparison_df.loc[comparison_df["Avg Confidence"].idxmax(), "Model"]
+    fastest_model = comparison_df.loc[comparison_df["Inference Time (s)"].idxmin(), "Model"]
+    most_detected_model = comparison_df.loc[comparison_df["Detected Objects"].idxmax(), "Model"]
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Best Avg Confidence", best_conf_model)
+    c2.metric("Fastest Model", fastest_model)
+    c3.metric("Most Detected Objects", most_detected_model)
+
+    st.markdown("### 🖼️ Detection Result Comparison")
+    img_col1, img_col2, img_col3 = st.columns(3)
+
+    with img_col1:
+        st.image(rendered_results["YOLO"]["image"], caption="YOLO", use_container_width=True)
+    with img_col2:
+        st.image(rendered_results["Faster R-CNN"]["image"], caption="Faster R-CNN", use_container_width=True)
+    with img_col3:
+        st.image(rendered_results["SSD"]["image"], caption="SSD", use_container_width=True)
+
+    st.markdown("### 📋 Comparison Table")
+    st.dataframe(comparison_df, use_container_width=True, hide_index=True)
+
+    st.markdown("### 📈 Visual Comparison")
+    chart_col1, chart_col2, chart_col3 = st.columns(3)
+
+    with chart_col1:
+        plot_bar_chart(
+            comparison_df,
+            "Model",
+            "Avg Confidence",
+            "Average Confidence by Model",
+            "Avg Confidence"
+        )
+
+    with chart_col2:
+        plot_bar_chart(
+            comparison_df,
+            "Model",
+            "Inference Time (s)",
+            "Inference Time by Model",
+            "Seconds"
+        )
+
+    with chart_col3:
+        plot_bar_chart(
+            comparison_df,
+            "Model",
+            "Detected Objects",
+            "Detected Objects by Model",
+            "Object Count"
+        )
+
+    st.markdown("### 🏆 Quick Comparison Summary")
+    st.success(
+        f"{best_conf_model} achieved the highest average confidence. "
+        f"{fastest_model} was the fastest model. "
+        f"{most_detected_model} detected the most objects."
+    )
+
+    detail_tab1, detail_tab2, detail_tab3 = st.tabs(
+        ["YOLO Details", "Faster R-CNN Details", "SSD Details"]
+    )
+
+    with detail_tab1:
+        st.markdown("### YOLO Detection Data")
+        if not rendered_results["YOLO"]["df"].empty:
+            st.dataframe(rendered_results["YOLO"]["df"], use_container_width=True, hide_index=True)
+        else:
+            st.info("No objects detected by YOLO.")
+        render_bill_section(
+            rendered_results["YOLO"]["bill_rows"],
+            rendered_results["YOLO"]["total_price"]
+        )
+
+    with detail_tab2:
+        st.markdown("### Faster R-CNN Detection Data")
+        if not rendered_results["Faster R-CNN"]["df"].empty:
+            st.dataframe(rendered_results["Faster R-CNN"]["df"], use_container_width=True, hide_index=True)
+        else:
+            st.info("No objects detected by Faster R-CNN.")
+        render_bill_section(
+            rendered_results["Faster R-CNN"]["bill_rows"],
+            rendered_results["Faster R-CNN"]["total_price"]
+        )
+
+    with detail_tab3:
+        st.markdown("### SSD Detection Data")
+        if not rendered_results["SSD"]["df"].empty:
+            st.dataframe(rendered_results["SSD"]["df"], use_container_width=True, hide_index=True)
+        else:
+            st.info("No objects detected by SSD.")
+        render_bill_section(
+            rendered_results["SSD"]["bill_rows"],
+            rendered_results["SSD"]["total_price"]
+        )
+
+
+def process_image(image_source, model_choice, min_confidence, source_label):
+    image = Image.open(image_source).convert("RGB")
+    image_np = np.array(image)
+
+    rendered_img, detected_items, df = detect_objects(
+        image_np, model_choice, min_confidence
+    )
+    bill_rows, total_price = calculate_bill(detected_items)
+
+    render_summary_cards(total_price, bill_rows, df)
+
+    tab1, tab2, tab3 = st.tabs(["🖼️ Image Preview", "🧾 Billing", "📊 Detection Data"])
+
+    with tab1:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(f"### {source_label}")
+            st.image(image, use_container_width=True)
+        with col2:
+            st.markdown("### Detection Result")
+            st.image(rendered_img, use_container_width=True)
+
+    with tab2:
+        render_bill_section(bill_rows, total_price)
+
+    with tab3:
+        st.markdown("### Detection Table")
+        if not df.empty:
+            st.dataframe(df, use_container_width=True, hide_index=True)
+        else:
+            st.info("No objects were detected.")
+
+
+def process_multiple_images(image_files, model_choice, min_confidence):
+    total_detected_objects = 0
+    total_billable_items = 0
+    grand_total_price = 0.0
+
+    st.markdown("## 🖼️ Multi-Image Detection Results")
+
+    for idx, image_file in enumerate(image_files, start=1):
+        image = Image.open(image_file).convert("RGB")
+        image_np = np.array(image)
+
+        rendered_img, detected_items, df = detect_objects(
+            image_np, model_choice, min_confidence
+        )
+        bill_rows, total_price = calculate_bill(detected_items)
+
+        total_detected_objects += len(df) if not df.empty else 0
+        total_billable_items += sum(row["Quantity"] for row in bill_rows) if bill_rows else 0
+        grand_total_price += total_price
+
+        with st.expander(f"Image {idx}: {image_file.name}", expanded=(idx == 1)):
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown("### Original Image")
+                st.image(image, use_container_width=True)
+
+            with col2:
+                st.markdown("### Detection Result")
+                st.image(rendered_img, use_container_width=True)
+
+            tab1, tab2 = st.tabs(["Detection Data", "Billing"])
+
+            with tab1:
+                if not df.empty:
+                    st.dataframe(df, use_container_width=True, hide_index=True)
+                else:
+                    st.info("No objects were detected.")
+
+            with tab2:
+                render_bill_section(bill_rows, total_price)
+
+    st.markdown("## 📦 Overall Summary")
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Total Uploaded Images", len(image_files))
+    c2.metric("Total Detected Objects", total_detected_objects)
+    c3.metric("Grand Total", f"RM {grand_total_price:.2f}")
+
+    st.caption(f"Total billable items across all images: {total_billable_items}")
+
+
+def compare_all_models_multiple_images(image_files, min_confidence):
+    model_names = ["YOLO", "Faster R-CNN", "SSD"]
+    comparison_rows = []
+
+    # ===== overall metrics across all uploaded images =====
+    for model_name in model_names:
+        total_detected_objects = 0
+        total_billable_items = 0
+        total_price = 0.0
+        confidence_values = []
+        total_elapsed = 0.0
+
+        for image_file in image_files:
+            image = Image.open(image_file).convert("RGB")
+            image_np = np.array(image)
+
+            start_time = time.perf_counter()
+            rendered_img, detected_items, df = detect_objects(
+                image_np, model_name, min_confidence
+            )
+            elapsed_time = time.perf_counter() - start_time
+
+            bill_rows, image_total_price = calculate_bill(detected_items)
+
+            total_elapsed += elapsed_time
+            total_detected_objects += len(df) if not df.empty else 0
+            total_billable_items += sum(row["Quantity"] for row in bill_rows) if bill_rows else 0
+            total_price += image_total_price
+
+            if df is not None and not df.empty and "Confidence" in df.columns:
+                confidence_values.extend(df["Confidence"].tolist())
+
+        avg_conf = float(np.mean(confidence_values)) if confidence_values else 0.0
+        max_conf = float(np.max(confidence_values)) if confidence_values else 0.0
+
+        comparison_rows.append({
+            "Model": model_name,
+            "Images Tested": len(image_files),
+            "Detected Objects": total_detected_objects,
+            "Billable Items": total_billable_items,
+            "Avg Confidence": round(avg_conf, 4),
+            "Max Confidence": round(max_conf, 4),
+            "Inference Time (s)": round(total_elapsed, 4),
+            "Estimated Total (RM)": round(total_price, 2),
+        })
+
+    comparison_df = pd.DataFrame(comparison_rows)
+
+    st.markdown("## 📊 Multi-Image Model Comparison")
+    st.caption(
+        "Compare YOLO, Faster R-CNN, and SSD across multiple uploaded images using confidence, detection count, inference time, billing result, and visual detection quality."
+    )
+
+    best_conf_model = comparison_df.loc[comparison_df["Avg Confidence"].idxmax(), "Model"]
+    fastest_model = comparison_df.loc[comparison_df["Inference Time (s)"].idxmin(), "Model"]
+    most_detected_model = comparison_df.loc[comparison_df["Detected Objects"].idxmax(), "Model"]
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Best Avg Confidence", best_conf_model)
+    c2.metric("Fastest Model", fastest_model)
+    c3.metric("Most Detected Objects", most_detected_model)
+
+    # ===== keep visual comparison feature =====
+    st.markdown("### 🖼️ Detection Result Comparison")
+
+    selected_image_name = st.selectbox(
+        "Choose one uploaded image for side-by-side model comparison",
+        [file.name for file in image_files],
+        key="compare_image_selector"
+    )
+
+    selected_file = next(file for file in image_files if file.name == selected_image_name)
+    selected_image = Image.open(selected_file).convert("RGB")
+    selected_image_np = np.array(selected_image)
+
+    visual_results = {}
+    for model_name in model_names:
+        rendered_img, detected_items, df = detect_objects(
+            selected_image_np, model_name, min_confidence
+        )
+        visual_results[model_name] = rendered_img
+
+    img_col1, img_col2, img_col3 = st.columns(3)
+    with img_col1:
+        st.image(visual_results["YOLO"], caption="YOLO", use_container_width=True)
+    with img_col2:
+        st.image(visual_results["Faster R-CNN"], caption="Faster R-CNN", use_container_width=True)
+    with img_col3:
+        st.image(visual_results["SSD"], caption="SSD", use_container_width=True)
+
+    st.markdown("### 📋 Comparison Table")
+    st.dataframe(comparison_df, use_container_width=True, hide_index=True)
+
+    st.markdown("### 📈 Visual Comparison")
+    chart_col1, chart_col2, chart_col3 = st.columns(3)
+
+    with chart_col1:
+        plot_bar_chart(
+            comparison_df,
+            "Model",
+            "Avg Confidence",
+            "Average Confidence by Model",
+            "Avg Confidence"
+        )
+
+    with chart_col2:
+        plot_bar_chart(
+            comparison_df,
+            "Model",
+            "Inference Time (s)",
+            "Inference Time by Model",
+            "Seconds"
+        )
+
+    with chart_col3:
+        plot_bar_chart(
+            comparison_df,
+            "Model",
+            "Detected Objects",
+            "Detected Objects by Model",
+            "Object Count"
+        )
+
+    st.markdown("### 🏆 Quick Comparison Summary")
+    st.success(
+        f"{best_conf_model} achieved the highest average confidence. "
+        f"{fastest_model} was the fastest model. "
+        f"{most_detected_model} detected the most objects."
+    )
 
 # =========================
 # UI RENDER
@@ -653,13 +1108,14 @@ def render_header():
             <div class="status-pill">AI-powered Smart Retail Demo</div>
             <div class="hero-title">Smart Retail Checkout System</div>
             <div class="hero-subtitle">
-                Upload an image or use your webcam to detect retail items, compare deep learning models,
+                Upload product images or use your webcam to detect retail items, compare deep learning models,
                 and generate an automatic checkout summary with total pricing.
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+
 
 def render_price_list():
     st.sidebar.markdown("## 🧾 Product Price List")
@@ -668,12 +1124,9 @@ def render_price_list():
     )
     st.sidebar.dataframe(price_df, use_container_width=True, hide_index=True)
 
+
 def render_sidebar_controls():
     st.sidebar.markdown("## ⚙️ Input Settings")
-
-    if st.sidebar.button("Clear Model Cache"):
-        st.cache_resource.clear()
-        st.sidebar.success("Model cache cleared. Please rerun the app.")
 
     model_choice = st.sidebar.selectbox(
         "Select Model",
@@ -701,12 +1154,11 @@ def render_sidebar_controls():
         step=0.05,
     )
 
-    debug_mode = st.sidebar.checkbox("Show debug output", value=False)
-
     st.sidebar.info(
-        "Tip: use a clear image with good lighting so the detection boxes and bill summary look more accurate."
+        "Tip: use clear images with good lighting so the detection boxes and billing results look more accurate."
     )
-    return model_choice, input_mode, min_confidence, debug_mode
+    return model_choice, input_mode, min_confidence
+
 
 def render_summary_cards(total_price, bill_rows, df):
     detected_count = len(df) if not df.empty else 0
@@ -721,6 +1173,7 @@ def render_summary_cards(total_price, bill_rows, df):
     if unique_billable:
         st.caption(f"Unique billable products: {unique_billable}")
 
+
 def render_bill_section(bill_rows, total_price):
     st.markdown("### 🧾 Checkout Summary")
 
@@ -733,43 +1186,11 @@ def render_bill_section(bill_rows, total_price):
     else:
         st.warning("No billable items detected in the current image.")
 
-def process_image(image_source, model_choice, min_confidence, source_label, debug_mode=False):
-    image = Image.open(image_source).convert("RGB")
-    image_np = np.array(image)
-
-    rendered_img, detected_items, df = detect_objects(
-        image_np, model_choice, min_confidence, debug_mode
-    )
-    bill_rows, total_price = calculate_bill(detected_items)
-
-    render_summary_cards(total_price, bill_rows, df)
-
-    tab1, tab2, tab3 = st.tabs(["🖼️ Image Preview", "🧾 Billing", "📊 Detection Data"])
-
-    with tab1:
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(f"### {source_label}")
-            st.image(image, use_container_width=True)
-        with col2:
-            st.markdown("### Detection Result")
-            st.image(rendered_img, use_container_width=True)
-
-    with tab2:
-        render_bill_section(bill_rows, total_price)
-
-    with tab3:
-        st.markdown("### Detection Table")
-        if not df.empty:
-            st.dataframe(df, use_container_width=True, hide_index=True)
-        else:
-            st.info("No objects were detected.")
-
 # =========================
 # APP
 # =========================
 render_header()
-model_choice, input_mode, min_confidence, debug_mode = render_sidebar_controls()
+model_choice, input_mode, min_confidence = render_sidebar_controls()
 render_price_list()
 
 info_col1, info_col2, info_col3 = st.columns(3)
@@ -792,25 +1213,48 @@ with info_col3:
 st.markdown("<div class='section-card'>", unsafe_allow_html=True)
 
 try:
-    with st.spinner(f"Loading {model_choice} model..."):
-        get_selected_model(model_choice)
+    get_selected_model(model_choice)
 
     if input_mode == "Upload Image":
-        uploaded_file = st.file_uploader(
-            "Upload a product image",
+        uploaded_files = st.file_uploader(
+            "Upload at least 3 product images",
             type=["jpg", "jpeg", "png"],
             help="Supported formats: JPG, JPEG, PNG",
+            accept_multiple_files=True,
         )
-        if uploaded_file is not None:
-            process_image(
-                uploaded_file,
-                model_choice,
-                min_confidence,
-                "Original Image",
-                debug_mode,
-            )
+
+        if uploaded_files and len(uploaded_files) > 0:
+            st.success(f"Uploaded {len(uploaded_files)} file(s).")
+
+            for file in uploaded_files:
+                st.write(f"• {file.name}")
+
+            if len(uploaded_files) < 3:
+                st.warning("Please upload at least 3 images to continue.")
+            else:
+                btn_col1, btn_col2 = st.columns(2)
+
+                with btn_col1:
+                    run_single = st.button("Run Selected Model", use_container_width=True)
+
+                with btn_col2:
+                    run_compare = st.button("Compare All 3 Models", use_container_width=True)
+
+                if run_single:
+                    process_multiple_images(
+                        uploaded_files,
+                        model_choice,
+                        min_confidence,
+                    )
+
+                if run_compare:
+                    compare_all_models_multiple_images(
+                        uploaded_files,
+                        min_confidence,
+                    )
+
         else:
-            st.info("Upload an image to start the smart checkout demo.")
+            st.info("Upload at least 3 images to start the smart checkout demo.")
     else:
         camera_image = st.camera_input("Take a picture for smart checkout")
         if camera_image is not None:
@@ -819,17 +1263,16 @@ try:
                 model_choice,
                 min_confidence,
                 "Captured Image",
-                debug_mode,
             )
         else:
             st.info("Use your webcam to capture an image and preview the checkout result.")
 
 except FileNotFoundError as e:
     st.error(f"Model file not found: {e}")
-    st.info("Please check your model path or Google Drive link.")
+    st.info("Make sure your model paths are correct for YOLO, Faster R-CNN, and SSD.")
 except RuntimeError as e:
     st.error(f"RuntimeError while loading model: {e}")
-    st.info("This usually means the model file is invalid, HTML was downloaded, or the saved weights do not match the model architecture.")
+    st.info("This usually means your saved .pth structure or num_classes does not match the current model.")
 except Exception as e:
     st.error(f"Error: {e}")
 

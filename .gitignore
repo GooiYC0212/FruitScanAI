@@ -1,20 +1,50 @@
-# Ignore models
+# =========================
+# Python
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# =========================
+# Virtual Environment
+# =========================
+venv/
+env/
+.venv/
+
+# =========================
+# Model files (VERY IMPORTANT)
+# =========================
 models/
 *.pt
 *.pth
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
+# =========================
+# Dataset (DO NOT UPLOAD)
+# =========================
+dataset/
+data/
+*.zip
 
-# Environment
-venv/
-.env
-
+# =========================
 # Streamlit cache
+# =========================
 .streamlit/
 
-# OS
+# =========================
+# OS files
+# =========================
 .DS_Store
 Thumbs.db
+
+# =========================
+# IDE
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# Logs
+# =========================
+*.log

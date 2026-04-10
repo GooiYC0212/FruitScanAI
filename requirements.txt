@@ -1,9 +1,9 @@
 streamlit
 ultralytics
-opencv-python-headless
+opencv-python-headless==4.10.0.84
 pillow
 pandas
-numpy<2
+numpy==1.26.4
 torch
 torchvision
 requests

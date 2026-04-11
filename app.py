@@ -472,22 +472,31 @@ def draw_boxes_pil(image_np, boxes, labels, scores):
     return np.array(image_pil)
 
 
-def download_file(url, save_path):
+def download_file(url, save_path, progress_placeholder=None, status_placeholder=None):
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
     response = requests.get(url, stream=True, timeout=120)
     if response.status_code != 200:
+        if status_placeholder is not None:
+            status_placeholder.empty()
+        if progress_placeholder is not None:
+            progress_placeholder.empty()
         raise RuntimeError(
             f"Failed to download {os.path.basename(save_path)}. "
             f"HTTP status code: {response.status_code}"
         )
 
     total_size = int(response.headers.get("content-length", 0))
-    progress_text = f"Downloading {os.path.basename(save_path)}..."
-    progress_bar = st.progress(0, text=progress_text)
-
     downloaded = 0
     chunk_size = 1024 * 1024
+
+    if progress_placeholder is None:
+        progress_placeholder = st.empty()
+
+    progress_bar = progress_placeholder.progress(
+        0,
+        text=f"Downloading {os.path.basename(save_path)}..."
+    )
 
     with open(save_path, "wb") as f:
         for chunk in response.iter_content(chunk_size=chunk_size):
@@ -499,16 +508,39 @@ def download_file(url, save_path):
                     percent = min(downloaded / total_size, 1.0)
                     progress_bar.progress(
                         percent,
-                        text=f"{progress_text} {int(percent * 100)}%"
+                        text=f"Downloading {os.path.basename(save_path)}... {int(percent * 100)}%"
                     )
 
-    progress_bar.empty()
+    progress_placeholder.empty()
+    if status_placeholder is not None:
+        status_placeholder.empty()
 
 
 def ensure_model(path, url):
-    if not os.path.exists(path):
-        st.warning(f"{os.path.basename(path)} not found. Downloading from Hugging Face...")
-        download_file(url, path)
+    model_key = f"downloaded_{os.path.basename(path)}"
+
+    if os.path.exists(path):
+        st.session_state[model_key] = True
+        return
+
+    if st.session_state.get(model_key, False):
+        return
+
+    status_placeholder = st.empty()
+    progress_placeholder = st.empty()
+
+    status_placeholder.warning(
+        f"{os.path.basename(path)} not found. Downloading from Hugging Face..."
+    )
+
+    download_file(
+        url,
+        path,
+        progress_placeholder=progress_placeholder,
+        status_placeholder=status_placeholder
+    )
+
+    st.session_state[model_key] = True
 
 
 # =========================
@@ -1216,8 +1248,6 @@ with info_col3:
 st.markdown("<div class='section-card'>", unsafe_allow_html=True)
 
 try:
-    get_selected_model(model_choice)
-
     if input_mode == "Upload Image":
         uploaded_files = st.file_uploader(
             "Upload at least 3 product images",

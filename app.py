@@ -281,13 +281,20 @@ def apply_custom_css():
 
         [data-testid="stFileUploaderFile"] button {
             background: transparent !important;
-            color: #ef4444 !important;
             border: none !important;
+            color: #ef4444 !important;
         }
 
         [data-testid="stFileUploaderFile"] button * {
             color: #ef4444 !important;
             fill: #ef4444 !important;
+            stroke: #ef4444 !important;
+        }
+
+        [data-testid="stFileUploaderFile"] svg {
+            color: #ef4444 !important;
+            fill: #ef4444 !important;
+            stroke: #ef4444 !important;
         }
 
         [data-testid="stFileUploader"] svg {
@@ -967,10 +974,9 @@ def process_multiple_images(image_files, model_choice, min_confidence):
     total_detected_objects = 0
     total_billable_items = 0
     grand_total_price = 0.0
+    image_results = []
 
-    st.markdown("## 🖼️ Multi-Image Detection Results")
-
-    for idx, image_file in enumerate(image_files, start=1):
+    for image_file in image_files:
         image = Image.open(image_file).convert("RGB")
         image_np = np.array(image)
 
@@ -983,27 +989,14 @@ def process_multiple_images(image_files, model_choice, min_confidence):
         total_billable_items += sum(row["Quantity"] for row in bill_rows) if bill_rows else 0
         grand_total_price += total_price
 
-        with st.expander(f"Image {idx}: {image_file.name}", expanded=(idx == 1)):
-            col1, col2 = st.columns(2)
-
-            with col1:
-                st.markdown("### Original Image")
-                st.image(image, use_container_width=True)
-
-            with col2:
-                st.markdown("### Detection Result")
-                st.image(rendered_img, use_container_width=True)
-
-            tab1, tab2 = st.tabs(["Detection Data", "Billing"])
-
-            with tab1:
-                if not df.empty:
-                    st.dataframe(df, use_container_width=True, hide_index=True)
-                else:
-                    st.info("No objects were detected.")
-
-            with tab2:
-                render_bill_section(bill_rows, total_price)
+        image_results.append({
+            "file_name": image_file.name,
+            "image": image,
+            "rendered_img": rendered_img,
+            "df": df,
+            "bill_rows": bill_rows,
+            "total_price": total_price,
+        })
 
     st.markdown("## 📦 Overall Summary")
 
@@ -1013,6 +1006,31 @@ def process_multiple_images(image_files, model_choice, min_confidence):
     c3.metric("Grand Total", f"RM {grand_total_price:.2f}")
 
     st.caption(f"Total billable items across all images: {total_billable_items}")
+
+    st.markdown("## 🖼️ Multi-Image Detection Results")
+
+    for idx, result in enumerate(image_results, start=1):
+        with st.expander(f"Image {idx}: {result['file_name']}", expanded=(idx == 1)):
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown("### Original Image")
+                st.image(result["image"], use_container_width=True)
+
+            with col2:
+                st.markdown("### Detection Result")
+                st.image(result["rendered_img"], use_container_width=True)
+
+            tab1, tab2 = st.tabs(["Detection Data", "Billing"])
+
+            with tab1:
+                if not result["df"].empty:
+                    st.dataframe(result["df"], use_container_width=True, hide_index=True)
+                else:
+                    st.info("No objects were detected.")
+
+            with tab2:
+                render_bill_section(result["bill_rows"], result["total_price"])
 
 
 def compare_all_models_multiple_images(image_files, min_confidence):

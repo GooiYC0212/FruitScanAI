@@ -798,241 +798,6 @@ def plot_bar_chart(df, x_col, y_col, title, ylabel):
     st.pyplot(fig)
 
 
-def compare_all_models(image_source, min_confidence):
-    image = Image.open(image_source).convert("RGB")
-    image_np = np.array(image)
-
-    model_names = ["YOLO", "Faster R-CNN", "SSD"]
-    comparison_rows = []
-    rendered_results = {}
-
-    for model_name in model_names:
-        start_time = time.perf_counter()
-
-        rendered_img, detected_items, df = detect_objects(
-            image_np, model_name, min_confidence
-        )
-
-        elapsed_time = time.perf_counter() - start_time
-        bill_rows, total_price = calculate_bill(detected_items)
-
-        summary = summarize_detection_result(
-            model_name=model_name,
-            df=df,
-            detected_items=detected_items,
-            total_price=total_price,
-            elapsed_time=elapsed_time,
-        )
-
-        comparison_rows.append(summary)
-        rendered_results[model_name] = {
-            "image": rendered_img,
-            "df": df,
-            "bill_rows": bill_rows,
-            "total_price": total_price,
-            "detected_items": detected_items,
-        }
-
-    comparison_df = pd.DataFrame(comparison_rows)
-
-    st.markdown("## 📊 Object Detection Model Comparison")
-    st.caption(
-        "Compare YOLO, Faster R-CNN, and SSD on the same uploaded image using detected object count, confidence score, inference time, and billing result."
-    )
-
-    best_conf_model = comparison_df.loc[comparison_df["Avg Confidence"].idxmax(), "Model"]
-    fastest_model = comparison_df.loc[comparison_df["Inference Time (s)"].idxmin(), "Model"]
-    most_detected_model = comparison_df.loc[comparison_df["Detected Objects"].idxmax(), "Model"]
-
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Best Avg Confidence", best_conf_model)
-    c2.metric("Fastest Model", fastest_model)
-    c3.metric("Most Detected Objects", most_detected_model)
-
-    st.markdown("### 🖼️ Detection Result Comparison")
-    img_col1, img_col2, img_col3 = st.columns(3)
-
-    with img_col1:
-        st.image(rendered_results["YOLO"]["image"], caption="YOLO", use_container_width=True)
-    with img_col2:
-        st.image(rendered_results["Faster R-CNN"]["image"], caption="Faster R-CNN", use_container_width=True)
-    with img_col3:
-        st.image(rendered_results["SSD"]["image"], caption="SSD", use_container_width=True)
-
-    st.markdown("### 📋 Comparison Table")
-    st.dataframe(comparison_df, use_container_width=True, hide_index=True)
-
-    st.markdown("### 📈 Visual Comparison")
-    chart_col1, chart_col2, chart_col3 = st.columns(3)
-
-    with chart_col1:
-        plot_bar_chart(
-            comparison_df,
-            "Model",
-            "Avg Confidence",
-            "Average Confidence by Model",
-            "Avg Confidence"
-        )
-
-    with chart_col2:
-        plot_bar_chart(
-            comparison_df,
-            "Model",
-            "Inference Time (s)",
-            "Inference Time by Model",
-            "Seconds"
-        )
-
-    with chart_col3:
-        plot_bar_chart(
-            comparison_df,
-            "Model",
-            "Detected Objects",
-            "Detected Objects by Model",
-            "Object Count"
-        )
-
-    st.markdown("### 🏆 Quick Comparison Summary")
-    st.success(
-        f"{best_conf_model} achieved the highest average confidence. "
-        f"{fastest_model} was the fastest model. "
-        f"{most_detected_model} detected the most objects."
-    )
-
-    detail_tab1, detail_tab2, detail_tab3 = st.tabs(
-        ["YOLO Details", "Faster R-CNN Details", "SSD Details"]
-    )
-
-    with detail_tab1:
-        st.markdown("### YOLO Detection Data")
-        if not rendered_results["YOLO"]["df"].empty:
-            st.dataframe(rendered_results["YOLO"]["df"], use_container_width=True, hide_index=True)
-        else:
-            st.info("No objects detected by YOLO.")
-        render_bill_section(
-            rendered_results["YOLO"]["bill_rows"],
-            rendered_results["YOLO"]["total_price"]
-        )
-
-    with detail_tab2:
-        st.markdown("### Faster R-CNN Detection Data")
-        if not rendered_results["Faster R-CNN"]["df"].empty:
-            st.dataframe(rendered_results["Faster R-CNN"]["df"], use_container_width=True, hide_index=True)
-        else:
-            st.info("No objects detected by Faster R-CNN.")
-        render_bill_section(
-            rendered_results["Faster R-CNN"]["bill_rows"],
-            rendered_results["Faster R-CNN"]["total_price"]
-        )
-
-    with detail_tab3:
-        st.markdown("### SSD Detection Data")
-        if not rendered_results["SSD"]["df"].empty:
-            st.dataframe(rendered_results["SSD"]["df"], use_container_width=True, hide_index=True)
-        else:
-            st.info("No objects detected by SSD.")
-        render_bill_section(
-            rendered_results["SSD"]["bill_rows"],
-            rendered_results["SSD"]["total_price"]
-        )
-
-
-def process_image(image_source, model_choice, min_confidence, source_label):
-    image = Image.open(image_source).convert("RGB")
-    image_np = np.array(image)
-
-    rendered_img, detected_items, df = detect_objects(
-        image_np, model_choice, min_confidence
-    )
-    bill_rows, total_price = calculate_bill(detected_items)
-
-    render_summary_cards(total_price, bill_rows, df)
-
-    tab1, tab2, tab3 = st.tabs(["🖼️ Image Preview", "🧾 Billing", "📊 Detection Data"])
-
-    with tab1:
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(f"### {source_label}")
-            st.image(image, use_container_width=True)
-        with col2:
-            st.markdown("### Detection Result")
-            st.image(rendered_img, use_container_width=True)
-
-    with tab2:
-        render_bill_section(bill_rows, total_price)
-
-    with tab3:
-        st.markdown("### Detection Table")
-        if not df.empty:
-            st.dataframe(df, use_container_width=True, hide_index=True)
-        else:
-            st.info("No objects were detected.")
-
-
-def process_multiple_images(image_files, model_choice, min_confidence):
-    total_detected_objects = 0
-    total_billable_items = 0
-    grand_total_price = 0.0
-    image_results = []
-
-    for image_file in image_files:
-        image = Image.open(image_file).convert("RGB")
-        image_np = np.array(image)
-
-        rendered_img, detected_items, df = detect_objects(
-            image_np, model_choice, min_confidence
-        )
-        bill_rows, total_price = calculate_bill(detected_items)
-
-        total_detected_objects += len(df) if not df.empty else 0
-        total_billable_items += sum(row["Quantity"] for row in bill_rows) if bill_rows else 0
-        grand_total_price += total_price
-
-        image_results.append({
-            "file_name": image_file.name,
-            "image": image,
-            "rendered_img": rendered_img,
-            "df": df,
-            "bill_rows": bill_rows,
-            "total_price": total_price,
-        })
-
-    st.markdown("## 📦 Overall Summary")
-
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Total Uploaded Images", len(image_files))
-    c2.metric("Total Detected Objects", total_detected_objects)
-    c3.metric("Grand Total", f"RM {grand_total_price:.2f}")
-
-    st.caption(f"Total billable items across all images: {total_billable_items}")
-
-    st.markdown("## 🖼️ Multi-Image Detection Results")
-
-    for idx, result in enumerate(image_results, start=1):
-        with st.expander(f"Image {idx}: {result['file_name']}", expanded=(idx == 1)):
-            col1, col2 = st.columns(2)
-
-            with col1:
-                st.markdown("### Original Image")
-                st.image(result["image"], use_container_width=True)
-
-            with col2:
-                st.markdown("### Detection Result")
-                st.image(result["rendered_img"], use_container_width=True)
-
-            tab1, tab2 = st.tabs(["Detection Data", "Billing"])
-
-            with tab1:
-                if not result["df"].empty:
-                    st.dataframe(result["df"], use_container_width=True, hide_index=True)
-                else:
-                    st.info("No objects were detected.")
-
-            with tab2:
-                render_bill_section(result["bill_rows"], result["total_price"])
-
-
 def compare_all_models_multiple_images(image_files, min_confidence):
     model_names = ["YOLO", "Faster R-CNN", "SSD"]
     comparison_rows = []
@@ -1162,6 +927,102 @@ def compare_all_models_multiple_images(image_files, min_confidence):
     )
 
 
+def process_image(image_source, model_choice, min_confidence, source_label):
+    image = Image.open(image_source).convert("RGB")
+    image_np = np.array(image)
+
+    rendered_img, detected_items, df = detect_objects(
+        image_np, model_choice, min_confidence
+    )
+    bill_rows, total_price = calculate_bill(detected_items)
+
+    render_summary_cards(total_price, bill_rows, df)
+
+    tab1, tab2, tab3 = st.tabs(["🖼️ Image Preview", "🧾 Billing", "📊 Detection Data"])
+
+    with tab1:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(f"### {source_label}")
+            st.image(image, use_container_width=True)
+        with col2:
+            st.markdown("### Detection Result")
+            st.image(rendered_img, use_container_width=True)
+
+    with tab2:
+        render_bill_section(bill_rows, total_price)
+
+    with tab3:
+        st.markdown("### Detection Table")
+        if not df.empty:
+            st.dataframe(df, use_container_width=True, hide_index=True)
+        else:
+            st.info("No objects were detected.")
+
+
+def process_multiple_images(image_files, model_choice, min_confidence):
+    total_detected_objects = 0
+    total_billable_items = 0
+    grand_total_price = 0.0
+    image_results = []
+
+    for image_file in image_files:
+        image = Image.open(image_file).convert("RGB")
+        image_np = np.array(image)
+
+        rendered_img, detected_items, df = detect_objects(
+            image_np, model_choice, min_confidence
+        )
+        bill_rows, total_price = calculate_bill(detected_items)
+
+        total_detected_objects += len(df) if not df.empty else 0
+        total_billable_items += sum(row["Quantity"] for row in bill_rows) if bill_rows else 0
+        grand_total_price += total_price
+
+        image_results.append({
+            "file_name": image_file.name,
+            "image": image,
+            "rendered_img": rendered_img,
+            "df": df,
+            "bill_rows": bill_rows,
+            "total_price": total_price,
+        })
+
+    st.markdown("## 📦 Overall Summary")
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Total Uploaded Images", len(image_files))
+    c2.metric("Total Detected Objects", total_detected_objects)
+    c3.metric("Grand Total", f"RM {grand_total_price:.2f}")
+
+    st.caption(f"Total billable items across all images: {total_billable_items}")
+
+    st.markdown("## 🖼️ Multi-Image Detection Results")
+
+    for idx, result in enumerate(image_results, start=1):
+        with st.expander(f"Image {idx}: {result['file_name']}", expanded=(idx == 1)):
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown("### Original Image")
+                st.image(result["image"], use_container_width=True)
+
+            with col2:
+                st.markdown("### Detection Result")
+                st.image(result["rendered_img"], use_container_width=True)
+
+            tab1, tab2 = st.tabs(["Detection Data", "Billing"])
+
+            with tab1:
+                if not result["df"].empty:
+                    st.dataframe(result["df"], use_container_width=True, hide_index=True)
+                else:
+                    st.info("No objects were detected.")
+
+            with tab2:
+                render_bill_section(result["bill_rows"], result["total_price"])
+
+
 # =========================
 # UI RENDER
 # =========================
@@ -1256,6 +1117,16 @@ def render_bill_section(bill_rows, total_price):
 # =========================
 render_header()
 startup_check_models()
+
+if "compare_mode" not in st.session_state:
+    st.session_state.compare_mode = False
+
+if "run_single_mode" not in st.session_state:
+    st.session_state.run_single_mode = False
+
+if "last_uploaded_names" not in st.session_state:
+    st.session_state.last_uploaded_names = []
+
 model_choice, input_mode, min_confidence = render_sidebar_controls()
 render_price_list()
 
@@ -1288,6 +1159,13 @@ try:
         )
 
         if uploaded_files and len(uploaded_files) > 0:
+            current_uploaded_names = [file.name for file in uploaded_files]
+
+            if st.session_state.last_uploaded_names != current_uploaded_names:
+                st.session_state.compare_mode = False
+                st.session_state.run_single_mode = False
+                st.session_state.last_uploaded_names = current_uploaded_names
+
             st.success(f"Uploaded {len(uploaded_files)} file(s).")
 
             for file in uploaded_files:
@@ -1299,25 +1177,32 @@ try:
                 btn_col1, btn_col2 = st.columns(2)
 
                 with btn_col1:
-                    run_single = st.button("Run Selected Model", use_container_width=True)
+                    if st.button("Run Selected Model", use_container_width=True):
+                        st.session_state.run_single_mode = True
+                        st.session_state.compare_mode = False
 
                 with btn_col2:
-                    run_compare = st.button("Compare All 3 Models", use_container_width=True)
+                    if st.button("Compare All 3 Models", use_container_width=True):
+                        st.session_state.compare_mode = True
+                        st.session_state.run_single_mode = False
 
-                if run_single:
+                if st.session_state.run_single_mode:
                     process_multiple_images(
                         uploaded_files,
                         model_choice,
                         min_confidence,
                     )
 
-                if run_compare:
+                if st.session_state.compare_mode:
                     compare_all_models_multiple_images(
                         uploaded_files,
                         min_confidence,
                     )
 
         else:
+            st.session_state.compare_mode = False
+            st.session_state.run_single_mode = False
+            st.session_state.last_uploaded_names = []
             st.info("Upload at least 3 images to start the smart checkout demo.")
     else:
         camera_image = st.camera_input("Take a picture for smart checkout")

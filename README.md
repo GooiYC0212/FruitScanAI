@@ -1,233 +1,109 @@
-# 🍎 Smart Retail Object Detection & Price Calculation System
+# FruitScanAI: Smart Retail Checkout System
 
-## 📌 Project Overview
+## Project Overview
+FruitScanAI is an AI-powered Smart Retail Checkout System developed as a prototype for automated product detection and billing in a retail environment. The system allows users to upload product images or use a webcam image for object detection, and it automatically generates an estimated checkout summary based on the detected items.
 
-This project presents an **AI-powered Smart Retail Checkout System** that automatically detects products and calculates total price using computer vision.
+This project focuses on fruit object detection and compares the performance of three deep learning models:
+- YOLO
+- Faster R-CNN
+- SSD
 
-The system supports **multiple deep learning models**:
-
-* YOLOv8 (Real-time detection ⚡)
-* Faster R-CNN (High accuracy 🎯)
-* SSD (Balanced performance ⚖️)
-
-Users can upload images or use a camera, and the system will:
-
-1. Detect objects (e.g., fruits)
-2. Draw bounding boxes
-3. Identify item classes
-4. Calculate total price automatically
+The system is deployed as a Streamlit web application and supports multi-image upload, model comparison, confidence-based detection, and automatic billing calculation.
 
 ---
 
-## 🎯 Objectives
-
-* Automate retail checkout process
-* Compare different object detection algorithms
-* Improve detection accuracy for **dense objects (stacked fruits)**
-* Build a deployable AI application using Streamlit
-
----
-
-## 🧠 Models Used
-
-| Model        | Strength                   | Weakness                   |
-| ------------ | -------------------------- | -------------------------- |
-| YOLOv8       | Fastest, real-time         | May merge objects if dense |
-| Faster R-CNN | High accuracy              | Slower                     |
-| SSD          | Balanced speed & detection | Less precise than FRCNN    |
+## Objectives
+The main objectives of this project are:
+- To develop an intelligent retail checkout prototype using computer vision
+- To detect fruit items automatically from images
+- To compare the detection performance of YOLO, Faster R-CNN, and SSD
+- To generate automatic billing results based on detected products
+- To provide an interactive and user-friendly web interface for demonstration purposes
 
 ---
 
-## 🗂️ Project Structure
+## Features
+- Upload at least 3 product images for testing
+- Webcam image capture support
+- Fruit object detection using deep learning models
+- Compare YOLO, Faster R-CNN, and SSD on the same images
+- Automatic billing and checkout summary
+- Multi-image detection results display
+- Confidence threshold adjustment
+- Clean and interactive Streamlit user interface
+- Hugging Face model hosting support
 
+---
+
+## Technologies Used
+- **Python**
+- **Streamlit**
+- **PyTorch**
+- **Torchvision**
+- **Ultralytics YOLO**
+- **OpenCV**
+- **Pillow**
+- **NumPy**
+- **Pandas**
+- **Matplotlib**
+- **Hugging Face**
+
+---
+
+## Models Used
+This project uses the following trained models:
+- **YOLO model**: best.pt
+- **Faster R-CNN model**: fasterrcnn_fruit.pth
+- **SSD model**: ssd_fruit.pth
+
+The models are hosted on Hugging Face due to file size limitations on GitHub.
+
+### Hugging Face Model Repository
+https://huggingface.co/Gooi0212/fruit-detection-models
+
+---
+
+## Supported Classes
+The system currently supports the following fruit classes:
+- Apple
+- Banana
+- Orange
+- Mango
+- Pineapple
+- Watermelon
+
+---
+
+## Pricing List
+The estimated billing uses the following sample price list:
+
+- Apple — RM2.50
+- Banana — RM1.50
+- Orange — RM2.20
+- Mango — RM4.00
+- Pineapple — RM5.50
+- Watermelon — RM8.00
+
+---
+
+## System Workflow
+1. User uploads product images or captures an image using webcam
+2. The selected deep learning model processes the image
+3. The system detects fruit objects and draws bounding boxes
+4. Detected items are counted
+5. The billing module calculates the estimated total price
+6. Users may compare all three models for performance evaluation
+
+---
+
+## Project Structure
 ```bash
-Smart-Retail-System/
+FruitScanAI/
 │
-├── app.py                  # Main Streamlit app
-├── requirements.txt        # Dependencies
-├── README.md               # Project documentation
-│
-├── models/                 # (Ignored in GitHub)
-│   ├── best.pt
-│   ├── fasterrcnn_fruit.pth
-│   ├── ssd_fruit.pth
-│
-├── dataset/                # (Not uploaded)
-│
-├── utils/ (optional)
-│
+├── app.py
+├── requirements.txt
+├── packages.txt
+├── README.md
 ├── .gitignore
-└── .gitattributes
-```
-
----
-
-## 🚀 How to Run the Project
-
-### 1️⃣ Clone the Repository
-
-```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
-cd YOUR_REPO
-```
-
----
-
-### 2️⃣ Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-### 3️⃣ Run the Application
-
-```bash
-streamlit run app.py
-```
-
----
-
-## 📦 Model Download (IMPORTANT)
-
-Due to GitHub file size limitations, models are hosted on **Google Drive**.
-
-The system will automatically download:
-
-* YOLOv8 model (`best.pt`)
-* Faster R-CNN model
-* SSD model
-
-👉 Make sure you have **internet connection** when running the app.
-
----
-
-## 🧾 Price List Example
-
-```python
-PRICE_LIST = {
-    "apple": 2.50,
-    "banana": 1.50,
-    "orange": 2.00,
-    "bottle": 3.50,
-    "cup": 2.00,
-    "pencil": 1.00
-}
-```
-
----
-
-## 🖼️ Features
-
-### ✅ Object Detection
-
-* Detect multiple objects in a single image
-* Works with dense fruit arrangements
-
-### ✅ Multi-Model Selection
-
-* Compare YOLO, FRCNN, SSD in one system
-
-### ✅ Automatic Billing
-
-* Total price calculated instantly
-
-### ✅ User-Friendly UI
-
-* Built with Streamlit
-* Clean and responsive interface
-
----
-
-## 📊 Dataset
-
-* Source: Roboflow Universe (Fruit Detection Dataset)
-* Format: YOLO format (bounding boxes)
-* Enhanced with:
-
-  * Dense object images
-  * Multi-object scenes
-  * Real-world retail conditions
-
----
-
-## ⚠️ Challenges & Solutions
-
-### ❗ Problem: YOLO detects one large box
-
-✔ Solution:
-
-* Improved dataset (dense annotations)
-* Adjusted IOU & confidence threshold
-* Added more training images
-
----
-
-### ❗ Problem: Model size too large for GitHub
-
-✔ Solution:
-
-* Store models in Google Drive
-* Auto-download in Streamlit
-
----
-
-### ❗ Problem: Detection inconsistency
-
-✔ Solution:
-
-* Use multiple models
-* Cross-compare outputs
-
----
-
-## 📈 Future Improvements
-
-* Add barcode detection
-* Integrate real-time video tracking
-* Improve dataset diversity
-* Deploy on cloud (Streamlit Cloud / AWS)
-
----
-
-## 👨‍💻 Technologies Used
-
-* Python
-* PyTorch
-* Ultralytics YOLOv8
-* OpenCV
-* Streamlit
-
----
-
-## 📌 Conclusion
-
-This system demonstrates how AI can transform retail checkout by:
-
-* Reducing manual effort
-* Improving efficiency
-* Providing real-time object detection
-
-It also highlights the importance of:
-
-* Dataset quality
-* Model selection
-* System integration
-
----
-
-## 🙌 Acknowledgement
-
-Dataset provided by:
-
-* Roboflow Universe
-
----
-
-## 📬 Contact
-
-For questions or improvements, feel free to reach out.
-
-```
-```
+├── .gitattributes
+└── models/   # optional local folder if running locally
